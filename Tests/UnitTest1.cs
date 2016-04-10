@@ -113,16 +113,16 @@ namespace Tests
             Assert.IsTrue(unpublishFolder);
         }
 
-        [TestMethod]
-        public void GetShardTest()
-        {
-            var objToTestPrivateMethod = new PrivateObject(typeof(MailRuCloud));
-            objToTestPrivateMethod.SetFieldOrProperty("Account", this.account);
-            var result = objToTestPrivateMethod.Invoke("GetShardInfo", ShardType.Get);
+        //[TestMethod]
+        //public void GetShardTest()
+        //{
+        //    var objToTestPrivateMethod = new PrivateObject(typeof(MailRuCloud));
+        //    objToTestPrivateMethod.SetFieldOrProperty("Account", this.account);
+        //    var result = objToTestPrivateMethod.Invoke("GetShardInfo", ShardType.Get);
 
-            Assert.IsNotNull(result);
-            Assert.IsTrue(!string.IsNullOrEmpty((result as ShardInfo).Url));
-        }
+        //    Assert.IsNotNull(result);
+        //    Assert.IsTrue(!string.IsNullOrEmpty((result as ShardInfo).Url));
+        //}
 
         [TestMethod]
         public void RemoveFileFolderTest()
