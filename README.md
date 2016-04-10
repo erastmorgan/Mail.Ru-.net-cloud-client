@@ -21,5 +21,5 @@ Main functionality:
 Upload and Download operations supports progress change event.
 
 --------------------------------------------------
-VERY BETA VERSION -------- NOT OFFICIAL CLIENT API
+              VERY BETA VERSION
 --------------------------------------------------
