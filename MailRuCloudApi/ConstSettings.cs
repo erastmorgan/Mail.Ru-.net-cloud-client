@@ -13,7 +13,7 @@ namespace MailRuCloudApi
     /// <summary>
     /// Additional class to constant values.
     /// </summary>
-    public class ConstSettings
+    internal class ConstSettings
     {
         public const string Domain = "mail.ru";
         public const string CloudDomain = "https://cloud.mail.ru";

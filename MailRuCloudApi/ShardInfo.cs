@@ -12,7 +12,7 @@ namespace MailRuCloudApi
     /// <summary>
     /// Shard types.
     /// </summary>
-    public enum ShardType
+    internal enum ShardType
     {
         /// <summary>
         /// Get video shard.
@@ -84,7 +84,7 @@ namespace MailRuCloudApi
     /// <summary>
     /// Servers info class.
     /// </summary>
-    public class ShardInfo
+    internal class ShardInfo
     {
         /// <summary>
         /// Gets shard type.

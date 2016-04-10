@@ -18,7 +18,7 @@ namespace MailRuCloudApi
     /// <summary>
     /// Object to response parsing.
     /// </summary>
-    public enum PObject
+    internal enum PObject
     {
         /// <summary>
         /// Authorization token.
@@ -44,7 +44,7 @@ namespace MailRuCloudApi
     /// <summary>
     /// JSON parser to object.
     /// </summary>
-    public static class JsonParser
+    internal static class JsonParser
     {
         /// <summary>
         /// Main parse function JSON context.
