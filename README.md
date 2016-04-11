@@ -23,3 +23,5 @@ Upload and Download operations supports progress change event.
 --------------------------------------------------
               VERY BETA VERSION
 --------------------------------------------------
+
+Distributed under the MIT license
