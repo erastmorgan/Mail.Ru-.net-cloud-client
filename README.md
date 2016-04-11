@@ -20,6 +20,11 @@ Main functionality:
 
 Upload and Download operations supports progress change event.
 
+Mail.ru cloud paths start with symbol "/", e.g:
+- Root directory just start with "/"
+- Folder in root directory as "/New folder"
+- File in root directory as "/NewFileName.txt"
+
 --------------------------------------------------
               VERY BETA VERSION
 --------------------------------------------------
