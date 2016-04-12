@@ -13,6 +13,7 @@ namespace MailRuCloudApi
     using System.Net;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Web;
 
     /// <summary>
     /// Cloud client.
@@ -283,7 +284,7 @@ namespace MailRuCloudApi
                 path = "/";
             }
 
-            var uri = new Uri(string.Format("{0}/api/v2/folder?token={1}&home={2}", ConstSettings.CloudDomain, this.Account.AuthToken, path.Replace("//", "/")));
+            var uri = new Uri(string.Format("{0}/api/v2/folder?token={1}&home={2}", ConstSettings.CloudDomain, this.Account.AuthToken, HttpUtility.UrlEncode(path)));
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
             request.Proxy = this.Account.Proxy;
             request.CookieContainer = this.Account.Cookies;
@@ -521,7 +522,7 @@ namespace MailRuCloudApi
         {
             this.CheckAuth();
             var shard = this.GetShardInfo(ShardType.Get);
-            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, sourceFullFilePath));
+            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, HttpUtility.UrlEncode(sourceFullFilePath)));
             request.Proxy = this.Account.Proxy;
             request.CookieContainer = this.Account.Cookies;
             request.Method = "GET";
