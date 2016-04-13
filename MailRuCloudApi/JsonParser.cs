@@ -95,7 +95,7 @@ namespace MailRuCloudApi
                         var weblink = string.Empty;
                         if (item["weblink"] != null)
                         {
-                            weblink = (string)item["weblink"];
+                            weblink = ConstSettings.PublishFileLink + (string)item["weblink"];
                         }
 
                         if (type == "folder")
@@ -107,7 +107,7 @@ namespace MailRuCloudApi
                                 Size = size,
                                 FulPath = path,
                                 Name = name,
-                                PublicLink = ConstSettings.PublishFileLink + weblink
+                                PublicLink = weblink
                             });
                         }
                         else if (type == "file")
