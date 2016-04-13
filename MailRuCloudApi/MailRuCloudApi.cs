@@ -223,22 +223,20 @@ namespace MailRuCloudApi
         /// Remove the file from public access.
         /// </summary>
         /// <param name="file">File info.</param>
-        /// <param name="publishLink">Public file link.</param>
         /// <returns>True or false result of the operation.</returns>
-        public bool UnpublishLink(File file, string publishLink)
+        public bool UnpublishLink(File file)
         {
-            return this.PublishUnpulishLink(file.Name, file.FulPath, false, publishLink).ToUpper() == file.FulPath.ToUpper();
+            return this.PublishUnpulishLink(file.Name, file.FulPath, false, file.PublicLink).ToUpper() == file.FulPath.ToUpper();
         }
 
         /// <summary>
         /// Remove the folder from public access.
         /// </summary>
         /// <param name="folder">Folder info.</param>
-        /// <param name="publishLink">Public folder link.</param>
         /// <returns>True or false result of the operation.</returns>
-        public bool UnpublishLink(Folder folder, string publishLink)
+        public bool UnpublishLink(Folder folder)
         {
-            return this.PublishUnpulishLink(folder.Name, folder.FulPath, false, publishLink).ToUpper() == folder.FulPath.ToUpper();
+            return this.PublishUnpulishLink(folder.Name, folder.FulPath, false, folder.PublicLink).ToUpper() == folder.FulPath.ToUpper();
         }
 
         /// <summary>

@@ -107,7 +107,7 @@ namespace MailRuCloudApi
                                 Size = size,
                                 FulPath = path,
                                 Name = name,
-                                PublicLink = weblink
+                                PublicLink = ConstSettings.PublishFileLink + weblink
                             });
                         }
                         else if (type == "file")
