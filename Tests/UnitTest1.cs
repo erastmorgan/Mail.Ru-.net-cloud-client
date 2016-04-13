@@ -86,7 +86,7 @@ namespace Tests
 
             Assert.IsTrue(!string.IsNullOrEmpty(directLink));
 
-            var unpublishFile = api.UnpublishLink(fileToDownload, publicFileLink);
+            var unpublishFile = api.UnpublishLink(fileToDownload);
             Assert.IsTrue(unpublishFile);
         }
 
@@ -106,8 +106,8 @@ namespace Tests
             Assert.IsTrue(!string.IsNullOrEmpty(publicFileLink));
             Assert.IsTrue(!string.IsNullOrEmpty(publishFolderLink));
 
-            var unpublishFile = api.UnpublishLink(fileToDownload, publicFileLink);
-            var unpublishFolder = api.UnpublishLink(folder, publishFolderLink);
+            var unpublishFile = api.UnpublishLink(fileToDownload);
+            var unpublishFolder = api.UnpublishLink(folder);
 
             Assert.IsTrue(unpublishFile);
             Assert.IsTrue(unpublishFolder);

@@ -535,7 +535,7 @@ namespace MailRuCloudApi
 
                 if (contentLength != 0)
                 {
-                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, totalBytesRead));
                 }
             }
         }
@@ -821,13 +821,13 @@ namespace MailRuCloudApi
             }
 
             int bufferLength = 8192;
+            var totalWritten = 0;
             if (length < bufferLength)
             {
                 sourceStream.BaseStream.CopyTo(outputStream);
             }
             else
             {
-                var totalWritten = 0;
                 double percentComplete = 0;
                 while (length > totalWritten)
                 {
@@ -854,7 +854,7 @@ namespace MailRuCloudApi
 
             if (includeProgressEvent)
             {
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+                this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, totalWritten));
             }
         }
 
