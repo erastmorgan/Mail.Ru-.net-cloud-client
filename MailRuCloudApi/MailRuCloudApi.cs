@@ -55,6 +55,16 @@ namespace MailRuCloudApi
         /// Copying folder in another space on the server.
         /// </summary>
         /// <param name="folder">Folder info to copying.</param>
+        /// <param name="destinationEntry">Destination entry on the server.</param>
+        public void Copy(Folder folder, Entry destinationEntry)
+        {
+            this.Copy(folder, destinationEntry.FullPath);
+        }
+
+        /// <summary>
+        /// Copying folder in another space on the server.
+        /// </summary>
+        /// <param name="folder">Folder info to copying.</param>
         /// <param name="destinationFolder">Destination folder on the server.</param>
         public void Copy(Folder folder, Folder destinationFolder)
         {
@@ -69,6 +79,16 @@ namespace MailRuCloudApi
         public void Copy(Folder folder, string destinationPath)
         {
             this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, false);
+        }
+
+        /// <summary>
+        /// Copying file in another space on the server.
+        /// </summary>
+        /// <param name="file">File info to copying.</param>
+        /// <param name="destinationEntry">Destination entry on the server.</param>
+        public void Copy(File file, Entry destinationEntry)
+        {
+            this.Copy(file, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -124,11 +144,31 @@ namespace MailRuCloudApi
         /// <summary>
         /// Move folder in another space on the server.
         /// </summary>
+        /// <param name="folder">Folder info to moving.</param>
+        /// <param name="destinationEntry">Destination entry on the server.</param>
+        public void Move(Folder folder, Entry destinationEntry)
+        {
+            this.Move(folder, destinationEntry.FullPath);
+        }
+
+        /// <summary>
+        /// Move folder in another space on the server.
+        /// </summary>
         /// <param name="folder">Folder info to move.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
         public void Move(Folder folder, string destinationPath)
         {
             this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, true);
+        }
+
+        /// <summary>
+        /// Move file in another space on the server.
+        /// </summary>
+        /// <param name="file">File info to move.</param>
+        /// <param name="destinationEntry">Destination entry on the server.</param>
+        public void Move(File file, Entry destinationEntry)
+        {
+            this.Move(file, destinationEntry.FullPath);
         }
 
         /// <summary>
