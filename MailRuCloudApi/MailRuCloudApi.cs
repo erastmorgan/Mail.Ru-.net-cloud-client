@@ -489,7 +489,7 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, null));
+                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, totalBytesRead));
                         }
                     }
                 }
@@ -522,7 +522,7 @@ namespace MailRuCloudApi
         {
             this.CheckAuth();
             var shard = this.GetShardInfo(ShardType.Get);
-            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, HttpUtility.UrlEncode(sourceFullFilePath)));
+            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, sourceFullFilePath.TrimStart('/')));
             request.Proxy = this.Account.Proxy;
             request.CookieContainer = this.Account.Cookies;
             request.Method = "GET";
@@ -804,7 +804,7 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, null));
+                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, totalWritten));
                         }
                     }
                 }
