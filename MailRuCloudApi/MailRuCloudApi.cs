@@ -349,6 +349,7 @@ namespace MailRuCloudApi
         /// <returns>True or false result of the operation.</returns>
         public async Task<bool> UploadFileAsync(FileInfo file, string destinationPath)
         {
+            destinationPath = destinationPath.EndsWith("/") ? HttpUtility.UrlEncode(destinationPath) : HttpUtility.UrlEncode(destinationPath + "/");
             var maxFileSize = 2L * 1024L * 1024L * 1024L;
             if (file.Length > maxFileSize)
             {
