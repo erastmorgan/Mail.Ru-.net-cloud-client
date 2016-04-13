@@ -27,13 +27,15 @@ namespace MailRuCloudApi
         /// <param name="name">Folder name.</param>
         /// <param name="size">Folder size.</param>
         /// <param name="fullPath">Full folder path.</param>
-        public Folder(int foldersCount, int filesCount, string name, long size, string fullPath)
+        /// <param name="publicLink">Public folder link.</param>
+        public Folder(int foldersCount, int filesCount, string name, long size, string fullPath, string publicLink = null)
         {
             this.NumberOfFolders = foldersCount;
             this.NumberOfFiles = filesCount;
             this.Name = name;
             this.Size = size;
             this.FulPath = fullPath;
+            this.PublicLink = publicLink;
         }
 
         /// <summary>
@@ -65,5 +67,11 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>Full folder path.</value>
         public string FulPath { get; internal set; }
+
+        /// <summary>
+        /// Gets public folder link.
+        /// </summary>
+        /// <value>Public link.</value>
+        public string PublicLink { get; internal set; }
     }
 }

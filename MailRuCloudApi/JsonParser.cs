@@ -92,6 +92,11 @@ namespace MailRuCloudApi
                         var name = (string)item["name"];
                         var size = (long)item["size"];
                         var path = (string)item["home"];
+                        var weblink = string.Empty;
+                        if (item["weblink"] != null)
+                        {
+                            weblink = (string)item["weblink"];
+                        }
 
                         if (type == "folder")
                         {
@@ -101,7 +106,8 @@ namespace MailRuCloudApi
                                 NumberOfFiles = (int)item["count"]["files"],
                                 Size = size,
                                 FulPath = path,
-                                Name = name
+                                Name = name,
+                                PublicLink = weblink
                             });
                         }
                         else if (type == "file")
@@ -111,7 +117,8 @@ namespace MailRuCloudApi
                                 Size = size,
                                 FulPath = path,
                                 Name = name,
-                                Hash = (string)item["hash"]
+                                Hash = (string)item["hash"],
+                                PublicLink = weblink
                             });
                         }
                     }

@@ -35,5 +35,11 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>Full file path.</value>
         public string FulPath { get; internal set; }
+
+        /// <summary>
+        /// Gets public file link.
+        /// </summary>
+        /// <value>Public link.</value>
+        public string PublicLink { get; internal set; }
     }
 }
