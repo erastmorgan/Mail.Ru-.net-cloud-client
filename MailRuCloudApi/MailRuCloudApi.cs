@@ -495,7 +495,10 @@ namespace MailRuCloudApi
                     }
                 }
 
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+                if (contentLength != 0)
+                {
+                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+                }
             }
         }
 
@@ -811,7 +814,10 @@ namespace MailRuCloudApi
                 }
             }
 
-            this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+            if (includeProgressEvent)
+            {
+                this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, null));
+            }
         }
 
         /// <summary>
