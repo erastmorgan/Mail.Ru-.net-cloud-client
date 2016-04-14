@@ -104,7 +104,10 @@ namespace MailRuCloudApi
                             {
                                 NumberOfFolders = (int)item["count"]["folders"],
                                 NumberOfFiles = (int)item["count"]["files"],
-                                Size = size,
+                                Size = new FileSize()
+                                {
+                                    DefaultValue = size
+                                },
                                 FulPath = path,
                                 Name = name,
                                 PublicLink = weblink
@@ -114,7 +117,10 @@ namespace MailRuCloudApi
                         {
                             files.Add(new File()
                             {
-                                Size = size,
+                                Size = new FileSize()
+                                {
+                                    DefaultValue = size
+                                },
                                 FulPath = path,
                                 Name = name,
                                 Hash = (string)item["hash"],

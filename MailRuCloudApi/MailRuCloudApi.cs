@@ -198,7 +198,16 @@ namespace MailRuCloudApi
         /// <param name="createIn">Destination path.</param>
         public void CreateFolder(string name, string createIn)
         {
-            this.AddFileInCloud(new File() { Name = name, FulPath = createIn + name, Hash = null, Size = 0 });
+            this.AddFileInCloud(new File()
+            {
+                Name = name,
+                FulPath = createIn + name,
+                Hash = null,
+                Size = new FileSize()
+                {
+                    DefaultValue = 0
+                }
+            });
         }
 
         /// <summary>
@@ -356,7 +365,7 @@ namespace MailRuCloudApi
                 (action) =>
             {
                 var param = action as object[];
-                return (bool)this.GetFileAsync((param[0] as File).FulPath, (param[0] as File).Name, param[1] as string, (int)(param[0] as File).Size).Result;
+                return (bool)this.GetFileAsync((param[0] as File).FulPath, (param[0] as File).Name, param[1] as string, (int)(param[0] as File).Size.DefaultValue).Result;
             },
             taskAction);
         }
@@ -374,7 +383,7 @@ namespace MailRuCloudApi
             {
                 var param = action as object[];
                 var fileInfo = param[0] as File;
-                return (byte[])this.GetFileAsync(fileInfo.FulPath, fileInfo.Name, null, (int)fileInfo.Size).Result;
+                return (byte[])this.GetFileAsync(fileInfo.FulPath, fileInfo.Name, null, (int)fileInfo.Size.DefaultValue).Result;
             },
             taskAction);
         }
@@ -432,7 +441,7 @@ namespace MailRuCloudApi
                     using (var s = t.Result)
                     {
                         this.WriteBytesInStream(boundaryRequest, s);
-                        this.WriteBytesInStream(file, s, true);
+                        this.WriteBytesInStream(file, s, true, OperationType.Upload);
                         this.WriteBytesInStream(endBoundaryRequest, s);
 
                         using (var response = (HttpWebResponse)request.GetResponse())
@@ -448,7 +457,10 @@ namespace MailRuCloudApi
                                     Name = file.Name,
                                     FulPath = destinationPath + file.Name,
                                     Hash = hashResult,
-                                    Size = sizeResult
+                                    Size = new FileSize()
+                                    {
+                                        DefaultValue = sizeResult
+                                    }
                                 });
                             }
                             else
@@ -490,7 +502,8 @@ namespace MailRuCloudApi
         /// <param name="resp">Web response.</param>
         /// <param name="outputStream">Output stream to writing the response.</param>
         /// <param name="contentLength">Length of the stream.</param>
-        internal void ReadResponseAsByte(WebResponse resp, Stream outputStream = null, int contentLength = 0)
+        /// <param name="operation">Currently operation type.</param>
+        internal void ReadResponseAsByte(WebResponse resp, Stream outputStream = null, int contentLength = 0, OperationType operation = OperationType.None)
         {
             if (contentLength != 0)
             {
@@ -528,14 +541,40 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, totalBytesRead));
+                            this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                                (int)percentComplete,
+                                new ProgressChangeTaskState()
+                                {
+                                    Type = operation,
+                                    TotalBytes = new FileSize()
+                                    {
+                                        DefaultValue = (long)contentLength
+                                    },
+                                    BytesInProgress = new FileSize()
+                                    {
+                                        DefaultValue = totalBytesRead
+                                    }
+                                }));
                         }
                     }
                 }
 
                 if (contentLength != 0)
                 {
-                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, totalBytesRead));
+                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                                100,
+                                new ProgressChangeTaskState()
+                                {
+                                    Type = operation,
+                                    TotalBytes = new FileSize()
+                                    {
+                                        DefaultValue = (long)contentLength
+                                    },
+                                    BytesInProgress = new FileSize()
+                                    {
+                                        DefaultValue = totalBytesRead
+                                    }
+                                }));
                 }
             }
         }
@@ -581,14 +620,14 @@ namespace MailRuCloudApi
                 {
                     using (var fileStream = System.IO.File.Create(destinationPath + fileName))
                     {
-                        ReadResponseAsByte(t.Result, fileStream, contentLength);
+                        ReadResponseAsByte(t.Result, fileStream, contentLength, OperationType.Download);
                         return fileStream.Length > 0 as object;
                     }
                 }
                 else
                 {
                     var stream = new MemoryStream();
-                    ReadResponseAsByte(t.Result, stream, contentLength);
+                    ReadResponseAsByte(t.Result, stream, contentLength, OperationType.Download);
                     return stream.ToArray() as object;
                 }
             });
@@ -760,8 +799,8 @@ namespace MailRuCloudApi
         /// <param name="fileInfo">File info.</param>
         private void AddFileInCloud(File fileInfo)
         {
-            var hasFile = fileInfo.Hash != null && fileInfo.Size != 0;
-            var filePart = hasFile ? string.Format("&hash={0}&size={1}", fileInfo.Hash, fileInfo.Size) : string.Empty;
+            var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
+            var filePart = hasFile ? string.Format("&hash={0}&size={1}", fileInfo.Hash, fileInfo.Size.DefaultValue) : string.Empty;
             var addFileRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&conflict=rename&api={1}&token={2}", fileInfo.FulPath, 2, this.Account.AuthToken) + filePart);
 
             var url = new Uri(string.Format("{0}/api/v2/{1}/add", ConstSettings.CloudDomain, hasFile ? "file" : "folder"));
@@ -795,13 +834,14 @@ namespace MailRuCloudApi
         /// <param name="fileInfo">File in file system.</param>
         /// <param name="outputStream">Stream to writing.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
-        private void WriteBytesInStream(FileInfo fileInfo, Stream outputStream, bool includeProgressEvent = false)
+        /// <param name="operation">Currently operation type.</param>
+        private void WriteBytesInStream(FileInfo fileInfo, Stream outputStream, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             using (var stream = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 8196, true))
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    this.WriteBytesInStream(source, outputStream, (int)fileInfo.Length, includeProgressEvent);
+                    this.WriteBytesInStream(source, outputStream, (int)fileInfo.Length, includeProgressEvent, operation);
                 }
             }
         }
@@ -813,7 +853,8 @@ namespace MailRuCloudApi
         /// <param name="outputStream">Stream to writing.</param>
         /// <param name="length">Stream length.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
-        private void WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, int length, bool includeProgressEvent = false)
+        /// <param name="operation">Currently operation type.</param>
+        private void WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, int length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             if (includeProgressEvent)
             {
@@ -846,7 +887,20 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs((int)percentComplete, totalWritten));
+                            this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                                (int)percentComplete,
+                                new ProgressChangeTaskState()
+                                {
+                                    Type = operation,
+                                    TotalBytes = new FileSize()
+                                    {
+                                        DefaultValue = (long)length
+                                    },
+                                    BytesInProgress = new FileSize()
+                                    {
+                                        DefaultValue = totalWritten
+                                    }
+                                }));
                         }
                     }
                 }
@@ -854,7 +908,20 @@ namespace MailRuCloudApi
 
             if (includeProgressEvent)
             {
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(100, totalWritten));
+                this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                                100,
+                                new ProgressChangeTaskState()
+                                {
+                                    Type = operation,
+                                    TotalBytes = new FileSize()
+                                    {
+                                        DefaultValue = (long)length
+                                    },
+                                    BytesInProgress = new FileSize()
+                                    {
+                                        DefaultValue = totalWritten == 0 ? (long)length : (long)totalWritten
+                                    }
+                                }));
             }
         }
 
@@ -864,13 +931,14 @@ namespace MailRuCloudApi
         /// <param name="bytes">Byte array.</param>
         /// <param name="outputStream">Stream to writing.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
-        private void WriteBytesInStream(byte[] bytes, Stream outputStream, bool includeProgressEvent = false)
+        /// <param name="operation">Currently operation type.</param>
+        private void WriteBytesInStream(byte[] bytes, Stream outputStream, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             using (var stream = new MemoryStream(bytes))
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    this.WriteBytesInStream(source, outputStream, bytes.Length, includeProgressEvent);
+                    this.WriteBytesInStream(source, outputStream, bytes.Length, includeProgressEvent, operation);
                 }
             }
         }

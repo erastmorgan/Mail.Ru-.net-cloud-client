@@ -28,7 +28,7 @@ namespace MailRuCloudApi
         /// Gets file size.
         /// </summary>
         /// <value>File size.</value>
-        public long Size { get; internal set; }
+        public FileSize Size { get; internal set; }
 
         /// <summary>
         /// Gets full file path with name in server.
