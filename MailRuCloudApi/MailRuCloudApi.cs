@@ -56,9 +56,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to copying.</param>
         /// <param name="destinationEntry">Destination entry on the server.</param>
-        public void Copy(Folder folder, Entry destinationEntry)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(Folder folder, Entry destinationEntry)
         {
-            this.Copy(folder, destinationEntry.FullPath);
+            return await this.Copy(folder, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -66,9 +67,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to copying.</param>
         /// <param name="destinationFolder">Destination folder on the server.</param>
-        public void Copy(Folder folder, Folder destinationFolder)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(Folder folder, Folder destinationFolder)
         {
-            this.Copy(folder, destinationFolder.FulPath);
+            return await this.Copy(folder, destinationFolder.FulPath);
         }
 
         /// <summary>
@@ -76,9 +78,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to copying.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
-        public void Copy(Folder folder, string destinationPath)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(Folder folder, string destinationPath)
         {
-            this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, false);
+            return await this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, false);
         }
 
         /// <summary>
@@ -86,9 +89,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to copying.</param>
         /// <param name="destinationEntry">Destination entry on the server.</param>
-        public void Copy(File file, Entry destinationEntry)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(File file, Entry destinationEntry)
         {
-            this.Copy(file, destinationEntry.FullPath);
+            return await this.Copy(file, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -96,9 +100,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to copying.</param>
         /// <param name="destinationFolder">Destination folder on the server.</param>
-        public void Copy(File file, Folder destinationFolder)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(File file, Folder destinationFolder)
         {
-            this.Copy(file, destinationFolder.FulPath);
+            return await this.Copy(file, destinationFolder.FulPath);
         }
 
         /// <summary>
@@ -106,9 +111,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to copying.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
-        public void Copy(File file, string destinationPath)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Copy(File file, string destinationPath)
         {
-            this.MoveOrCopy(file.Name, file.FulPath, destinationPath, false);
+            return await this.MoveOrCopy(file.Name, file.FulPath, destinationPath, false);
         }
 
         /// <summary>
@@ -116,9 +122,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Source folder info.</param>
         /// <param name="newFileName">New folder name.</param>
-        public void Rename(Folder folder, string newFileName)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Rename(Folder folder, string newFileName)
         {
-            this.Rename(folder.Name, folder.FulPath, newFileName);
+            return await this.Rename(folder.Name, folder.FulPath, newFileName);
         }
 
         /// <summary>
@@ -126,9 +133,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">Source file info.</param>
         /// <param name="newFileName">New file name.</param>
-        public void Rename(File file, string newFileName)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Rename(File file, string newFileName)
         {
-            this.Rename(file.Name, file.FulPath, newFileName);
+            return await this.Rename(file.Name, file.FulPath, newFileName);
         }
 
         /// <summary>
@@ -136,9 +144,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to moving.</param>
         /// <param name="destinationFolder">Destination folder on the server.</param>
-        public void Move(Folder folder, Folder destinationFolder)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(Folder folder, Folder destinationFolder)
         {
-            this.Move(folder, destinationFolder.FulPath);
+            return await this.Move(folder, destinationFolder.FulPath);
         }
 
         /// <summary>
@@ -146,9 +155,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to moving.</param>
         /// <param name="destinationEntry">Destination entry on the server.</param>
-        public void Move(Folder folder, Entry destinationEntry)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(Folder folder, Entry destinationEntry)
         {
-            this.Move(folder, destinationEntry.FullPath);
+            return await this.Move(folder, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -156,9 +166,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info to move.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
-        public void Move(Folder folder, string destinationPath)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(Folder folder, string destinationPath)
         {
-            this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, true);
+            return await this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, true);
         }
 
         /// <summary>
@@ -166,9 +177,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to move.</param>
         /// <param name="destinationEntry">Destination entry on the server.</param>
-        public void Move(File file, Entry destinationEntry)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(File file, Entry destinationEntry)
         {
-            this.Move(file, destinationEntry.FullPath);
+            return await this.Move(file, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -176,9 +188,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to move.</param>
         /// <param name="destinationFolder">Destination folder on the server.</param>
-        public void Move(File file, Folder destinationFolder)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(File file, Folder destinationFolder)
         {
-            this.Move(file, destinationFolder.FulPath);
+            return await this.Move(file, destinationFolder.FulPath);
         }
 
         /// <summary>
@@ -186,9 +199,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info to move.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
-        public void Move(File file, string destinationPath)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Move(File file, string destinationPath)
         {
-            this.MoveOrCopy(file.Name, file.FulPath, destinationPath, true);
+            return await this.MoveOrCopy(file.Name, file.FulPath, destinationPath, true);
         }
 
         /// <summary>
@@ -196,12 +210,13 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="name">New path name.</param>
         /// <param name="createIn">Destination path.</param>
-        public void CreateFolder(string name, string createIn)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> CreateFolder(string name, string createIn)
         {
-            this.AddFileInCloud(new File()
+            return await this.AddFileInCloud(new File()
             {
                 Name = name,
-                FulPath = createIn + name,
+                FulPath = createIn.EndsWith("/") ? createIn + name : createIn + "/" + name,
                 Hash = null,
                 Size = new FileSize()
                 {
@@ -214,18 +229,20 @@ namespace MailRuCloudApi
         /// Remove the file on server.
         /// </summary>
         /// <param name="file">File info.</param>
-        public void Remove(File file)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Remove(File file)
         {
-            this.Remove(file.Name, file.FulPath);
+            return await this.Remove(file.Name, file.FulPath);
         }
 
         /// <summary>
         /// Remove the folder on server.
         /// </summary>
         /// <param name="folder">Folder info.</param>
-        public void Remove(Folder folder)
+        /// <returns>True or false operation result.</returns>
+        public async Task<bool> Remove(Folder folder)
         {
-            this.Remove(folder.Name, folder.FulPath);
+            return await this.Remove(folder.Name, folder.FulPath);
         }
 
         /// <summary>
@@ -233,11 +250,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="publishLink">Public file link.</param>
         /// <returns>Direct link.</returns>
-        public string GetPublishDirectLink(string publishLink)
+        public async Task<string> GetPublishDirectLink(string publishLink)
         {
             CookieContainer cookie = null;
-            var shard = this.GetShardInfo(ShardType.WeblinkGet, true, out cookie);
-
+            var shard = await this.GetShardInfo(ShardType.WeblinkGet, true, cookie);
             var addFileRequest = Encoding.UTF8.GetBytes(string.Format("api={0}", 2));
 
             var url = new Uri(string.Format("{0}/api/v2/tokens/download", ConstSettings.CloudDomain));
@@ -252,20 +268,24 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(addFileRequest, 0, addFileRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    s.Write(addFileRequest, 0, addFileRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        throw new Exception();
-                    }
+                        if (response.StatusCode != HttpStatusCode.OK)
+                        {
+                            throw new Exception();
+                        }
 
-                    var token = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Token);
-                    return string.Format("{0}/{1}?key={2}", shard.Url, publishLink.Replace(ConstSettings.PublishFileLink, string.Empty), token);
+                        var token = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Token);
+                        return string.Format("{0}/{1}?key={2}", shard.Url, publishLink.Replace(ConstSettings.PublishFileLink, string.Empty), token);
+                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -273,9 +293,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info.</param>
         /// <returns>True or false result of the operation.</returns>
-        public bool UnpublishLink(File file)
+        public async Task<bool> UnpublishLink(File file)
         {
-            return this.PublishUnpulishLink(file.Name, file.FulPath, false, file.PublicLink).ToUpper() == file.FulPath.ToUpper();
+            return (await this.PublishUnpulishLink(file.Name, file.FulPath, false, file.PublicLink)).ToUpper() == file.FulPath.ToUpper();
         }
 
         /// <summary>
@@ -283,9 +303,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info.</param>
         /// <returns>True or false result of the operation.</returns>
-        public bool UnpublishLink(Folder folder)
+        public async Task<bool> UnpublishLink(Folder folder)
         {
-            return this.PublishUnpulishLink(folder.Name, folder.FulPath, false, folder.PublicLink).ToUpper() == folder.FulPath.ToUpper();
+            return (await this.PublishUnpulishLink(folder.Name, folder.FulPath, false, folder.PublicLink)).ToUpper() == folder.FulPath.ToUpper();
         }
 
         /// <summary>
@@ -293,9 +313,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info.</param>
         /// <returns>Public file link.</returns>
-        public string GetPublishLink(File file)
+        public async Task<string> GetPublishLink(File file)
         {
-            return this.PublishUnpulishLink(file.Name, file.FulPath, true, null);
+            return await this.PublishUnpulishLink(file.Name, file.FulPath, true, null);
         }
 
         /// <summary>
@@ -303,9 +323,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info.</param>
         /// <returns>Public folder link.</returns>
-        public string GetPublishLink(Folder folder)
+        public async Task<string> GetPublishLink(Folder folder)
         {
-            return this.PublishUnpulishLink(folder.Name, folder.FulPath, true, null);
+            return await this.PublishUnpulishLink(folder.Name, folder.FulPath, true, null);
         }
 
         /// <summary>
@@ -313,9 +333,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="folder">Folder info.</param>
         /// <returns>List of the items.</returns>
-        public Entry GetItems(Folder folder)
+        public async Task<Entry> GetItems(Folder folder)
         {
-            return this.GetItems(folder.FulPath);
+            return await this.GetItems(folder.FulPath);
         }
 
         /// <summary>
@@ -323,7 +343,7 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="path">Path in the cloud to return the list of the items.</param>
         /// <returns>List of the items.</returns>
-        public Entry GetItems(string path)
+        public async Task<Entry> GetItems(string path)
         {
             this.CheckAuth();
             if (string.IsNullOrEmpty(path))
@@ -339,17 +359,21 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var response = request.GetResponse() as HttpWebResponse)
+            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                if (response.StatusCode == HttpStatusCode.OK)
+                using (var response = t.Result as HttpWebResponse)
                 {
-                    return (Entry)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Entry);
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        return (Entry)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Entry);
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
                 }
-                else
-                {
-                    throw new Exception();
-                }
-            }
+            });
         }
 
         /// <summary>
@@ -358,14 +382,14 @@ namespace MailRuCloudApi
         /// <param name="file">File info.</param>
         /// <param name="destinationPath">Destination path on the file system.</param>
         /// <returns>True or false result of the operation.</returns>
-        public async Task<bool> GetFileAsync(File file, string destinationPath)
+        public async Task<bool> GetFile(File file, string destinationPath)
         {
             var taskAction = new object[] { file, destinationPath };
             return await Task.Factory.StartNew(
                 (action) =>
             {
                 var param = action as object[];
-                return (bool)this.GetFileAsync((param[0] as File).FulPath, (param[0] as File).Name, param[1] as string, (int)(param[0] as File).Size.DefaultValue).Result;
+                return (bool)this.GetFile((param[0] as File).FulPath, (param[0] as File).Name, param[1] as string, (int)(param[0] as File).Size.DefaultValue).Result;
             },
             taskAction);
         }
@@ -375,7 +399,7 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="file">File info.</param>
         /// <returns>File as byte array.</returns>
-        public async Task<byte[]> GetFileAsync(File file)
+        public async Task<byte[]> GetFile(File file)
         {
             var taskAction = new object[] { file };
             return await Task.Factory.StartNew(
@@ -383,7 +407,7 @@ namespace MailRuCloudApi
             {
                 var param = action as object[];
                 var fileInfo = param[0] as File;
-                return (byte[])this.GetFileAsync(fileInfo.FulPath, fileInfo.Name, null, (int)fileInfo.Size.DefaultValue).Result;
+                return (byte[])this.GetFile(fileInfo.FulPath, fileInfo.Name, null, (int)fileInfo.Size.DefaultValue).Result;
             },
             taskAction);
         }
@@ -394,9 +418,9 @@ namespace MailRuCloudApi
         /// <param name="file">File info.</param>
         /// <param name="destinationPath">Destination path on the server.</param>
         /// <returns>True or false result of the operation.</returns>
-        public async Task<bool> UploadFileAsync(FileInfo file, string destinationPath)
+        public async Task<bool> UploadFile(FileInfo file, string destinationPath)
         {
-            destinationPath = destinationPath.EndsWith("/") ? HttpUtility.UrlEncode(destinationPath) : HttpUtility.UrlEncode(destinationPath + "/");
+            destinationPath = destinationPath.EndsWith("/") ? destinationPath : destinationPath + "/";
             var maxFileSize = 2L * 1024L * 1024L * 1024L;
             if (file.Length > maxFileSize)
             {
@@ -404,7 +428,7 @@ namespace MailRuCloudApi
             }
 
             this.CheckAuth();
-            var shard = this.GetShardInfo(ShardType.Upload);
+            var shard = await this.GetShardInfo(ShardType.Upload);
             var boundary = Guid.NewGuid();
 
             //// Boundary request building.
@@ -425,7 +449,7 @@ namespace MailRuCloudApi
             request.CookieContainer = this.Account.Cookies;
             request.Method = "POST";
             request.ContentLength = file.Length + boundaryRequest.LongLength + endBoundaryRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, destinationPath);
+            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(destinationPath));
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = string.Format("multipart/form-data; boundary=----{0}", boundary.ToString());
@@ -452,16 +476,16 @@ namespace MailRuCloudApi
                                 var hashResult = resp[0];
                                 var sizeResult = long.Parse(resp[1].Replace("\r\n", string.Empty));
 
-                                this.AddFileInCloud(new File()
+                                return this.AddFileInCloud(new File()
                                 {
                                     Name = file.Name,
-                                    FulPath = destinationPath + file.Name,
+                                    FulPath = HttpUtility.UrlDecode(destinationPath) + file.Name,
                                     Hash = hashResult,
                                     Size = new FileSize()
                                     {
                                         DefaultValue = sizeResult
                                     }
-                                });
+                                }).Result;
                             }
                             else
                             {
@@ -469,8 +493,6 @@ namespace MailRuCloudApi
                             }
                         }
                     }
-
-                    return true;
                 }
                 finally
                 {
@@ -599,10 +621,10 @@ namespace MailRuCloudApi
         /// <param name="destinationPath">Destination full file path on the file system.</param>
         /// <param name="contentLength">File length.</param>
         /// <returns>File as byte array.</returns>
-        private async Task<object> GetFileAsync(string sourceFullFilePath, string fileName, string destinationPath, int contentLength = 0)
+        private async Task<object> GetFile(string sourceFullFilePath, string fileName, string destinationPath, int contentLength = 0)
         {
             this.CheckAuth();
-            var shard = this.GetShardInfo(ShardType.Get);
+            var shard = await this.GetShardInfo(ShardType.Get);
             var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, sourceFullFilePath.TrimStart('/')));
             request.Proxy = this.Account.Proxy;
             request.CookieContainer = this.Account.Cookies;
@@ -641,7 +663,7 @@ namespace MailRuCloudApi
         /// <param name="publish">Publish or not to publish operation.</param>
         /// <param name="publishLink">Public item link if publish operation is used.</param>
         /// <returns>Public link or public item id.</returns>
-        private string PublishUnpulishLink(string name, string fullPath, bool publish, string publishLink)
+        private async Task<string> PublishUnpulishLink(string name, string fullPath, bool publish, string publishLink)
         {
             var addFileRequest = Encoding.UTF8.GetBytes(
                 string.Format(
@@ -665,27 +687,31 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(addFileRequest, 0, addFileRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    s.Write(addFileRequest, 0, addFileRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        var publicLink = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.PublicLink);
-                        if (publish)
+                        if (response.StatusCode == HttpStatusCode.OK)
                         {
-                            return ConstSettings.PublishFileLink + publicLink;
+                            var publicLink = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.PublicLink);
+                            if (publish)
+                            {
+                                return ConstSettings.PublishFileLink + publicLink;
+                            }
+                            else
+                            {
+                                return publicLink;
+                            }
                         }
-                        else
-                        {
-                            return publicLink;
-                        }
-                    }
 
-                    throw new HttpListenerException((int)response.StatusCode);
+                        throw new HttpListenerException((int)response.StatusCode);
+                    }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -694,7 +720,8 @@ namespace MailRuCloudApi
         /// <param name="name">File or folder name.</param>
         /// <param name="fullPath">Full path of the file or folder.</param>
         /// <param name="newName">New file or path name.</param>
-        private void Rename(string name, string fullPath, string newName)
+        /// <returns>True or false result operation.</returns>
+        private async Task<bool> Rename(string name, string fullPath, string newName)
         {
             var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&name={4}", fullPath, 2, this.Account.AuthToken, this.Account.LoginName, newName));
 
@@ -710,17 +737,23 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(moveRequest, 0, moveRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    s.Write(moveRequest, 0, moveRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        throw new Exception();
+                        if (response.StatusCode != HttpStatusCode.OK)
+                        {
+                            throw new Exception();
+                        }
+
+                        return true;
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -730,7 +763,8 @@ namespace MailRuCloudApi
         /// <param name="sourceFullPath">Full path source or file name.</param>
         /// <param name="destinationPath">Destination path to cope or move.</param>
         /// <param name="move">Move or copy operation.</param>
-        private void MoveOrCopy(string sourceName, string sourceFullPath, string destinationPath, bool move)
+        /// <returns>True or false result operation.</returns>
+        private async Task<bool> MoveOrCopy(string sourceName, string sourceFullPath, string destinationPath, bool move)
         {
             var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&folder={4}", sourceFullPath, 2, this.Account.AuthToken, this.Account.LoginName, destinationPath));
 
@@ -746,17 +780,23 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(moveRequest, 0, moveRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    s.Write(moveRequest, 0, moveRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        throw new Exception();
+                        if (response.StatusCode != HttpStatusCode.OK)
+                        {
+                            throw new Exception();
+                        }
+
+                        return true;
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -764,7 +804,8 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="name">File or folder name.</param>
         /// <param name="fullPath">Full file or folder name.</param>
-        private void Remove(string name, string fullPath)
+        /// <returns>True or false result operation.</returns>
+        private async Task<bool> Remove(string name, string fullPath)
         {
             var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", fullPath, 2, this.Account.AuthToken, this.Account.LoginName));
 
@@ -780,24 +821,31 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(removeRequest, 0, removeRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    s.Write(removeRequest, 0, removeRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        throw new Exception();
+                        if (response.StatusCode != HttpStatusCode.OK)
+                        {
+                            throw new Exception();
+                        }
+
+                        return true;
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
         /// Create file record in the cloud.
         /// </summary>
         /// <param name="fileInfo">File info.</param>
-        private void AddFileInCloud(File fileInfo)
+        /// <returns>True or false result operation.</returns>
+        private async Task<bool> AddFileInCloud(File fileInfo)
         {
             var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
             var filePart = hasFile ? string.Format("&hash={0}&size={1}", fileInfo.Hash, fileInfo.Size.DefaultValue) : string.Empty;
@@ -809,23 +857,29 @@ namespace MailRuCloudApi
             request.CookieContainer = this.Account.Cookies;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, fileInfo.FulPath.Substring(0, fileInfo.FulPath.LastIndexOf(fileInfo.Name)));
+            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(fileInfo.FulPath.Substring(0, fileInfo.FulPath.LastIndexOf(fileInfo.Name))));
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var s = request.GetRequestStream())
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                s.Write(addFileRequest, 0, addFileRequest.Length);
-                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var s = t.Result)
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    s.Write(addFileRequest, 0, addFileRequest.Length);
+                    using (var response = (HttpWebResponse)request.GetResponse())
                     {
-                        throw new Exception();
+                        if (response.StatusCode != HttpStatusCode.OK)
+                        {
+                            throw new Exception();
+                        }
+
+                        return true;
                     }
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -948,10 +1002,10 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="shardType">Shard type as numeric type.</param>
         /// <returns>Shard info.</returns>
-        private ShardInfo GetShardInfo(ShardType shardType)
+        private async Task<ShardInfo> GetShardInfo(ShardType shardType)
         {
             CookieContainer cookie = null;
-            return this.GetShardInfo(shardType, false, out cookie);
+            return await this.GetShardInfo(shardType, false, cookie);
         }
 
         /// <summary>
@@ -961,7 +1015,7 @@ namespace MailRuCloudApi
         /// <param name="useAnonymousUser">To get anonymous user.</param>
         /// <param name="cookie">Generated cookie.</param>
         /// <returns>Shard info.</returns>
-        private ShardInfo GetShardInfo(ShardType shardType, bool useAnonymousUser, out CookieContainer cookie)
+        private async Task<ShardInfo> GetShardInfo(ShardType shardType, bool useAnonymousUser, CookieContainer cookie)
         {
             this.CheckAuth();
             var uri = new Uri(string.Format("{0}/api/v2/dispatcher?{2}={1}", ConstSettings.CloudDomain, !useAnonymousUser ? this.Account.AuthToken : 2.ToString(), !useAnonymousUser ? "token" : "api"));
@@ -972,18 +1026,22 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            using (var response = request.GetResponse() as HttpWebResponse)
+            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
+            return await task.ContinueWith((t) =>
             {
-                if (response.StatusCode == HttpStatusCode.OK)
+                using (var response = t.Result as HttpWebResponse)
                 {
-                    cookie = request.CookieContainer;
-                    return (ShardInfo)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Shard, shardType.GetEnumDescription());
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        cookie = request.CookieContainer;
+                        return (ShardInfo)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Shard, shardType.GetEnumDescription());
+                    }
+                    else
+                    {
+                        throw new Exception();
+                    }
                 }
-                else
-                {
-                    throw new Exception();
-                }
-            }
+            });
         }
 
         /// <summary>

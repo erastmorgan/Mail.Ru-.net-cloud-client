@@ -11,6 +11,7 @@ namespace MailRuCloudApi
     using System.Net;
     using System.Net.Configuration;
     using System.Text;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// MAIL.RU account info.
@@ -89,7 +90,7 @@ namespace MailRuCloudApi
             {
                 throw new ArgumentException("Password is null or empty.");
             }
-            
+
             if (new DefaultProxySection().Enabled)
             {
                 this.Proxy = WebProxy.GetDefaultProxy();
@@ -104,7 +105,7 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = ConstSettings.DefaultAcceptType;
             request.UserAgent = ConstSettings.UserAgent;
-            using (System.IO.Stream s = request.GetRequestStream())
+            using (var s = request.GetRequestStream())
             {
                 s.Write(requestData, 0, requestData.Length);
                 using (var response = (HttpWebResponse)request.GetResponse())
