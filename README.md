@@ -5,8 +5,8 @@ Main functionality:
 - Create folder
 - Copy file
 - Copy folder
-- Download file (Async operation)
-- Upload file (Async operation)
+- Download file
+- Upload file
 - Get list of the files and folders
 - Get public file link
 - Get public folder link
@@ -18,6 +18,7 @@ Main functionality:
 - Remove file
 - Remove folder
 
+All operations supports async calls.
 Upload and Download operations supports progress change event.
 
 Mail.ru cloud paths start with symbol "/", e.g:
