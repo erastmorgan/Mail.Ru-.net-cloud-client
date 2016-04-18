@@ -12,6 +12,7 @@ namespace MailRuCloudApi
     using System.IO;
     using System.Net;
     using System.Text;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Web;
 
@@ -20,6 +21,11 @@ namespace MailRuCloudApi
     /// </summary>
     public class MailRuCloud
     {
+        /// <summary>
+        /// Async tasks cancelation token.
+        /// </summary>
+        private CancellationTokenSource cancelToken = new CancellationTokenSource();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MailRuCloud" /> class. Do not forget to set Account property before using any API functions.
         /// </summary>
@@ -49,7 +55,16 @@ namespace MailRuCloudApi
         /// <summary>
         /// Gets or sets account to connect with cloud.
         /// </summary>
+        /// <value>Account info.</value>
         public Account Account { get; set; }
+
+        /// <summary>
+        /// Abort all prolonged async operations.
+        /// </summary>
+        public void AbortAllAsyncTreads()
+        {
+            this.cancelToken.Cancel(true);
+        }
 
         /// <summary>
         /// Copying folder in another space on the server.
@@ -458,15 +473,17 @@ namespace MailRuCloudApi
             request.AllowWriteStreamBuffering = false;
 
             var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
-            return await task.ContinueWith((t) =>
+            return await task.ContinueWith(
+                (t, m) =>
             {
                 try
                 {
+                    var token = (CancellationToken)m;
                     using (var s = t.Result)
                     {
-                        this.WriteBytesInStream(boundaryRequest, s);
-                        this.WriteBytesInStream(file, s, true, OperationType.Upload);
-                        this.WriteBytesInStream(endBoundaryRequest, s);
+                        this.WriteBytesInStream(boundaryRequest, s, token);
+                        this.WriteBytesInStream(file, s, token, true, OperationType.Upload);
+                        this.WriteBytesInStream(endBoundaryRequest, s, token);
 
                         using (var response = (HttpWebResponse)request.GetResponse())
                         {
@@ -487,12 +504,12 @@ namespace MailRuCloudApi
                                     }
                                 }).Result;
                             }
-                            else
-                            {
-                                throw new Exception();
-                            }
                         }
                     }
+                }
+                catch
+                {
+                    return false;
                 }
                 finally
                 {
@@ -501,7 +518,10 @@ namespace MailRuCloudApi
                         t.Result.Dispose();
                     }
                 }
-            });
+
+                return true;
+            },
+            this.cancelToken.Token);
         }
 
         /// <summary>
@@ -513,8 +533,16 @@ namespace MailRuCloudApi
         {
             using (var stream = new MemoryStream())
             {
-                this.ReadResponseAsByte(resp, stream);
-                return Encoding.UTF8.GetString(stream.ToArray());
+                try
+                {
+                    this.ReadResponseAsByte(resp, this.cancelToken.Token, stream);
+                    return Encoding.UTF8.GetString(stream.ToArray());
+                }
+                catch
+                {
+                    //// Cancellation token.
+                    return "7035ba55-7d63-4349-9f73-c454529d4b2e";
+                }
             }
         }
 
@@ -522,10 +550,11 @@ namespace MailRuCloudApi
         /// Read web response as byte array.
         /// </summary>
         /// <param name="resp">Web response.</param>
+        /// <param name="token">Async task cancellation token.</param>
         /// <param name="outputStream">Output stream to writing the response.</param>
         /// <param name="contentLength">Length of the stream.</param>
         /// <param name="operation">Currently operation type.</param>
-        internal void ReadResponseAsByte(WebResponse resp, Stream outputStream = null, long contentLength = 0, OperationType operation = OperationType.None)
+        internal void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null, long contentLength = 0, OperationType operation = OperationType.None)
         {
             if (contentLength != 0)
             {
@@ -557,6 +586,8 @@ namespace MailRuCloudApi
                 int bytesRead = 0;
                 while ((bytesRead = reader.Read(fileBytes, totalBytesRead, totalBufSize - totalBytesRead)) > 0)
                 {
+                    token.ThrowIfCancellationRequested();
+
                     if (outputStream != null)
                     {
                         outputStream.Write(fileBytes, totalBytesRead, bytesRead);
@@ -649,23 +680,47 @@ namespace MailRuCloudApi
 
             var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
             destinationPath = destinationPath == null || destinationPath.EndsWith(@"\") ? destinationPath : destinationPath + @"\";
-            return await task.ContinueWith((t) =>
+            return await task.ContinueWith(
+                (t, m) =>
             {
+                var token = (CancellationToken)m;
                 if (destinationPath != null && fileName != null)
                 {
-                    using (var fileStream = System.IO.File.Create(destinationPath + fileName))
+                    try
                     {
-                        ReadResponseAsByte(t.Result, fileStream, contentLength, OperationType.Download);
-                        return fileStream.Length > 0 as object;
+                        using (var fileStream = System.IO.File.Create(destinationPath + fileName))
+                        {
+                            ReadResponseAsByte(t.Result, token, fileStream, contentLength, OperationType.Download);
+                            return fileStream.Length > 0 as object;
+                        }
+                    }
+                    catch
+                    {
+                        if (System.IO.File.Exists(destinationPath + fileName))
+                        {
+                            System.IO.File.Delete(destinationPath + fileName);
+                        }
+
+                        return false as object;
                     }
                 }
                 else
                 {
-                    var stream = new MemoryStream();
-                    ReadResponseAsByte(t.Result, stream, contentLength, OperationType.Download);
-                    return stream.ToArray() as object;
+                    try
+                    {
+                        using (var stream = new MemoryStream())
+                        {
+                            ReadResponseAsByte(t.Result, token, stream, contentLength, OperationType.Download);
+                            return stream.ToArray() as object;
+                        }
+                    }
+                    catch
+                    {
+                        return null;
+                    }
                 }
-            });
+            },
+            this.cancelToken.Token);
         }
 
         /// <summary>
@@ -900,15 +955,16 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="fileInfo">File in file system.</param>
         /// <param name="outputStream">Stream to writing.</param>
+        /// <param name="token">Async task cancellation token.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
         /// <param name="operation">Currently operation type.</param>
-        private void WriteBytesInStream(FileInfo fileInfo, Stream outputStream, bool includeProgressEvent = false, OperationType operation = OperationType.None)
+        private void WriteBytesInStream(FileInfo fileInfo, Stream outputStream, CancellationToken token, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             using (var stream = new FileStream(fileInfo.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 8196))
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    this.WriteBytesInStream(source, outputStream, fileInfo.Length, includeProgressEvent, operation);
+                    this.WriteBytesInStream(source, outputStream, token, fileInfo.Length, includeProgressEvent, operation);
                 }
             }
         }
@@ -918,10 +974,11 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="sourceStream">Source stream reader.</param>
         /// <param name="outputStream">Stream to writing.</param>
+        /// <param name="token">Async task cancellation token.</param>
         /// <param name="length">Stream length.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
         /// <param name="operation">Currently operation type.</param>
-        private void WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, long length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
+        private void WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, CancellationToken token, long length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             if (includeProgressEvent)
             {
@@ -952,6 +1009,8 @@ namespace MailRuCloudApi
                 double percentComplete = 0;
                 while (length > totalWritten)
                 {
+                    token.ThrowIfCancellationRequested();
+
                     var bytes = sourceStream.ReadBytes(bufferLength);
                     outputStream.Write(bytes, 0, bufferLength);
 
@@ -1010,15 +1069,16 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="bytes">Byte array.</param>
         /// <param name="outputStream">Stream to writing.</param>
+        /// <param name="token">Async task cancellation token.</param>
         /// <param name="includeProgressEvent">On or off progress change event.</param>
         /// <param name="operation">Currently operation type.</param>
-        private void WriteBytesInStream(byte[] bytes, Stream outputStream, bool includeProgressEvent = false, OperationType operation = OperationType.None)
+        private void WriteBytesInStream(byte[] bytes, Stream outputStream, CancellationToken token, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {
             using (var stream = new MemoryStream(bytes))
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    this.WriteBytesInStream(source, outputStream, bytes.LongLength, includeProgressEvent, operation);
+                    this.WriteBytesInStream(source, outputStream, token, bytes.LongLength, includeProgressEvent, operation);
                 }
             }
         }

@@ -61,6 +61,12 @@ namespace MailRuCloudApi
                 throw new ArgumentNullException("Response text is null or empty.");
             }
 
+            //// Cancellation token.
+            if (response == "7035ba55-7d63-4349-9f73-c454529d4b2e")
+            {
+                return null;
+            }
+
             try
             {
                 parsedJObject = JObject.Parse(response);
