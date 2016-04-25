@@ -5,9 +5,9 @@ Main functionality with implementations:
 - Create folder
   CreateFolder(string folderName, string destinationPath) - return bool result of the operation
 - Copy file
-  Copy(File fileObject, Entry destinationEntryObject)  - return bool result of the operation
+  <br/>Copy(File fileObject, Entry destinationEntryObject)  - return bool result of the operation
   <br/>Copy(File fileObject, Folder destinationFolderObject) - return bool result of the operation
-  Copy(File fileObject, string destinationPath) - return bool result of the operation
+  <br/>Copy(File fileObject, string destinationPath) - return bool result of the operation
 - Copy folder
   Copy(Folder folderObject, Entry destinationEntryObject) - return bool result of the operation
   Copy(Folder folderObject, Folder destinationFolderObject) - return bool result of the operation
