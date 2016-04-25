@@ -34,26 +34,26 @@ namespace MailRuCloudApi
         /// <summary>
         /// Gets number of the folders.
         /// </summary>
-        public int NumberOfFolders { get; private set; }
+        public int NumberOfFolders { get; internal set; }
 
         /// <summary>
         /// Gets number of the files.
         /// </summary>
-        public int NumberOfFiles { get; private set; }
+        public int NumberOfFiles { get; internal set; }
 
         /// <summary>
         /// Gets list of the folders with their specification.
         /// </summary>
-        public List<Folder> Folders { get; private set; }
+        public List<Folder> Folders { get; internal set; }
 
         /// <summary>
         /// Gets list of the files with their specification.
         /// </summary>
-        public List<File> Files { get; private set; }
+        public List<File> Files { get; internal set; }
 
         /// <summary>
         /// Gets full entry path on the server.
         /// </summary>
-        public string FullPath { get; private set; }
+        public string FullPath { get; internal set; }
     }
 }

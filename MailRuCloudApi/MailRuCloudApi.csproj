@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\Lib\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -51,13 +51,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Account.cs" />
-    <Compile Include="ConstSettings.cs" />
+    <Compile Include="ConstSettings.cs">
+      <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="Entry.cs" />
     <Compile Include="File.cs" />
     <Compile Include="FileSize.cs" />
     <Compile Include="Folder.cs" />
     <Compile Include="JsonParser.cs" />
     <Compile Include="MailRuCloudApi.cs" />
+    <Compile Include="MultiFile.cs" />
+    <Compile Include="MultiFilePart.cs">
+      <ExcludeFromStyleCop>False</ExcludeFromStyleCop>
+    </Compile>
     <Compile Include="ProgressChangeTaskState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ShardInfo.cs" />

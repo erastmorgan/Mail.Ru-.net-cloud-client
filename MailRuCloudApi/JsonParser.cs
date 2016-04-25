@@ -36,9 +36,9 @@ namespace MailRuCloudApi
         Shard = 2,
 
         /// <summary>
-        /// Shared link.
+        /// Full body string.
         /// </summary>
-        PublicLink = 3
+        BodyAsString = 3
     }
 
     /// <summary>
@@ -130,7 +130,13 @@ namespace MailRuCloudApi
                                 FulPath = path,
                                 Name = name,
                                 Hash = (string)item["hash"],
-                                PublicLink = weblink
+                                PublicLink = weblink,
+                                Type = FileType.SingleFile,
+                                PrimaryName = name,
+                                PrimarySize = new FileSize()
+                                {
+                                    DefaultValue = size
+                                }
                             });
                         }
                     }
@@ -147,7 +153,7 @@ namespace MailRuCloudApi
                         Url = (string)selectedShard["url"]
                     };
 
-                case PObject.PublicLink:
+                case PObject.BodyAsString:
                     return (string)parsedJObject["body"];
             }
 

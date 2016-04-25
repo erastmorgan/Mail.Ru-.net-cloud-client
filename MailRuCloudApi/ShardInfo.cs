@@ -87,19 +87,19 @@ namespace MailRuCloudApi
     internal class ShardInfo
     {
         /// <summary>
-        /// Gets shard type.
+        /// Gets or sets shard type.
         /// </summary>
         /// <value>Shard type.</value>
         public ShardType Type { get; internal set; }
 
         /// <summary>
-        /// Gets number of the shards.
+        /// Gets or sets number of the shards.
         /// </summary>
         /// <value>Number of the shards.</value>
         public int Count { get; internal set; }
 
         /// <summary>
-        /// Gets shard link.
+        /// Gets or sets shard link.
         /// </summary>
         /// <value>Shard link.</value>
         public string Url { get; internal set; }

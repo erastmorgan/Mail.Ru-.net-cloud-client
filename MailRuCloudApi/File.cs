@@ -8,6 +8,22 @@
 namespace MailRuCloudApi
 {
     /// <summary>
+    /// Cloud file type.
+    /// </summary>
+    public enum FileType
+    {
+        /// <summary>
+        /// File as single file.
+        /// </summary>
+        SingleFile = 0,
+
+        /// <summary>
+        /// File composed from several pieces, this file type has not hash and public link.
+        /// </summary>
+        MultiFile = 1
+    }
+
+    /// <summary>
     /// Server file info.
     /// </summary>
     public class File
@@ -41,5 +57,21 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>Public link.</value>
         public string PublicLink { get; internal set; }
+
+        /// <summary>
+        /// Gets cloud file type.
+        /// </summary>
+        public FileType Type { get; internal set; }
+
+        /// <summary>
+        /// Gets or sets base file name.
+        /// </summary>
+        internal string PrimaryName { get; set; }
+
+        /// <summary>
+        /// Gets or sets base file size.
+        /// </summary>
+        /// <value>File size.</value>
+        internal FileSize PrimarySize { get; set; }
     }
 }
