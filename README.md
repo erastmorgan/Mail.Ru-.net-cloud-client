@@ -16,7 +16,7 @@ Main functionality with implementations:
   <br/>GetFile(File fileObject, [bool includeProgressEvent = True]) - return byte array of the file
   <br/>GetFile(File fileObject, string destinationPathOnCopmuter, [bool includeProgressEvent = True]) - return bool result of the operation and save file in destination path on computer
 - Upload file
-  UploadFile(FileInfo file, string destinationPath) - return bool result of the operation
+  <br/>UploadFile(FileInfo file, string destinationPath) - return bool result of the operation
 - Get list of the files and folders
   <br/>GetItems(Folder folderObject) - return Entry object with files and folders on the server (include list of the File and Folder object)
   <br/>GetItems(string pathOnServer) - return Entry object with files and folders on the server (include list of the File and Folder object)
