@@ -54,7 +54,7 @@ namespace MailRuCloudApi
         /// Gets folder name.
         /// </summary>
         /// <value>Folder name.</value>
-        public string Name { get; internal set; }
+        public string Name { get; set; }
 
         /// <summary>
         /// Gets folder size.
@@ -66,7 +66,7 @@ namespace MailRuCloudApi
         /// Gets full folder path on the server.
         /// </summary>
         /// <value>Full folder path.</value>
-        public string FulPath { get; internal set; }
+        public string FulPath { get; set; }
 
         /// <summary>
         /// Gets public folder link.
