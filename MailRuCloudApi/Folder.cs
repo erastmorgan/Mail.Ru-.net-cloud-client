@@ -5,6 +5,9 @@
 // <author>Korolev Erast.</author>
 //-----------------------------------------------------------------------
 
+using System;
+using System.IO;
+
 namespace MailRuCloudApi
 {
     /// <summary>
@@ -34,7 +37,7 @@ namespace MailRuCloudApi
             this.NumberOfFiles = filesCount;
             this.Name = name;
             this.Size = size;
-            this.FulPath = fullPath;
+            this.FullPath = fullPath;
             this.PublicLink = publicLink;
         }
 
@@ -66,12 +69,48 @@ namespace MailRuCloudApi
         /// Gets full folder path on the server.
         /// </summary>
         /// <value>Full folder path.</value>
-        public string FulPath { get; set; }
+        public string FullPath { get; set; }
 
         /// <summary>
         /// Gets public folder link.
         /// </summary>
         /// <value>Public link.</value>
         public string PublicLink { get; internal set; }
+
+        public DateTime CreationTimeUtc
+        {
+            get
+            {
+                return DateTime.Now;
+            }
+            set { }
+        }
+
+        public DateTime LastWriteTimeUtc
+        {
+            get
+            {
+                return DateTime.Now;
+            }
+            set { }
+        }
+
+        public DateTime LastAccessTimeUtc
+        {
+            get
+            {
+                return DateTime.Now;
+            }
+            set { }
+        }
+
+        public FileAttributes Attributes
+        {
+            get
+            {
+                return FileAttributes.Normal;
+            }
+            set { }
+        }
     }
 }

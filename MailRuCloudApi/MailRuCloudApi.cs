@@ -90,7 +90,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(Folder folder, Folder destinationFolder)
         {
-            return await this.Copy(folder, destinationFolder.FulPath);
+            return await this.Copy(folder, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(Folder folder, string destinationPath)
         {
-            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, false));
+            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FullPath, destinationPath, false));
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(File file, Folder destinationFolder)
         {
-            return await this.Copy(file, destinationFolder.FulPath);
+            return await this.Copy(file, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -155,7 +155,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Rename(Folder folder, string newFileName)
         {
-            return await this.Rename(folder.Name, folder.FulPath, newFileName);
+            return await this.Rename(folder.Name, folder.FullPath, newFileName);
         }
 
         /// <summary>
@@ -218,7 +218,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(Folder folder, Folder destinationFolder)
         {
-            return await this.Move(folder, destinationFolder.FulPath);
+            return await this.Move(folder, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(Folder folder, string destinationPath)
         {
-            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FulPath, destinationPath, true));
+            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FullPath, destinationPath, true));
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(File file, Folder destinationFolder)
         {
-            return await this.Move(file, destinationFolder.FulPath);
+            return await this.Move(file, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -342,7 +342,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Remove(Folder folder)
         {
-            return await this.Remove(folder.FulPath);
+            return await this.Remove(folder.FullPath);
         }
 
         /// <summary>
@@ -416,7 +416,7 @@ namespace MailRuCloudApi
         /// <returns>True or false result of the operation.</returns>
         public async Task<bool> UnpublishLink(Folder folder)
         {
-            return (await this.PublishUnpulishLink(folder.Name, folder.FulPath, false, folder.PublicLink)).ToUpper() == folder.FulPath.ToUpper();
+            return (await this.PublishUnpulishLink(folder.Name, folder.FullPath, false, folder.PublicLink)).ToUpper() == folder.FullPath.ToUpper();
         }
 
         /// <summary>
@@ -441,7 +441,7 @@ namespace MailRuCloudApi
         /// <returns>Public folder link.</returns>
         public async Task<string> GetPublishLink(Folder folder)
         {
-            return await this.PublishUnpulishLink(folder.Name, folder.FulPath, true, null);
+            return await this.PublishUnpulishLink(folder.Name, folder.FullPath, true, null);
         }
 
         /// <summary>
@@ -451,7 +451,7 @@ namespace MailRuCloudApi
         /// <returns>List of the items.</returns>
         public async Task<Entry> GetItems(Folder folder)
         {
-            return await this.GetItems(folder.FulPath);
+            return await this.GetItems(folder.FullPath);
         }
 
         /// <summary>

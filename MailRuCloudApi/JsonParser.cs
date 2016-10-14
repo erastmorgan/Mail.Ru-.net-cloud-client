@@ -114,7 +114,7 @@ namespace MailRuCloudApi
                                 {
                                     DefaultValue = size
                                 },
-                                FulPath = path,
+                                FullPath = path,
                                 Name = name,
                                 PublicLink = weblink
                             });

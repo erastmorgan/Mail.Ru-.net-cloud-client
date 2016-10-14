@@ -41,6 +41,8 @@ namespace MailRuCloudApi
         /// </summary>
         public int NumberOfFiles { get; internal set; }
 
+        public int NumberOfItems => NumberOfFolders + NumberOfFiles;
+
         /// <summary>
         /// Gets list of the folders with their specification.
         /// </summary>
