@@ -31,11 +31,11 @@ namespace MailRuCloudApi
         /// <param name="size">Folder size.</param>
         /// <param name="fullPath">Full folder path.</param>
         /// <param name="publicLink">Public folder link.</param>
-        public Folder(int foldersCount, int filesCount, string name, FileSize size, string fullPath, string publicLink = null)
+        public Folder(int foldersCount, int filesCount, /*string name,*/ FileSize size, string fullPath, string publicLink = null)
         {
             this.NumberOfFolders = foldersCount;
             this.NumberOfFiles = filesCount;
-            this.Name = name;
+            //this.Name = name;
             this.Size = size;
             this.FullPath = fullPath;
             this.PublicLink = publicLink;
@@ -57,7 +57,16 @@ namespace MailRuCloudApi
         /// Gets folder name.
         /// </summary>
         /// <value>Folder name.</value>
-        public string Name { get; set; }
+        public string Name
+        {
+            get
+            {
+                if (FullPath == "/") return "\\";
+                return FullPath.TrimEnd('/').Remove(0, FullPath.LastIndexOf('/') + 1);
+                //Substring(FullPath.LastIndexOf('/') + 1, FullPath.Length - 1);
+
+            }
+        }
 
         /// <summary>
         /// Gets folder size.
@@ -69,7 +78,11 @@ namespace MailRuCloudApi
         /// Gets full folder path on the server.
         /// </summary>
         /// <value>Full folder path.</value>
-        public string FullPath { get; set; }
+        public string FullPath
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Gets public folder link.
@@ -81,7 +94,7 @@ namespace MailRuCloudApi
         {
             get
             {
-                return DateTime.Now;
+                return DateTime.Now.AddDays(-1);
             }
             set { }
         }
@@ -90,7 +103,7 @@ namespace MailRuCloudApi
         {
             get
             {
-                return DateTime.Now;
+                return DateTime.Now.AddDays(-1);
             }
             set { }
         }
@@ -99,7 +112,7 @@ namespace MailRuCloudApi
         {
             get
             {
-                return DateTime.Now;
+                return DateTime.Now.AddDays(-1);
             }
             set { }
         }
@@ -108,7 +121,7 @@ namespace MailRuCloudApi
         {
             get
             {
-                return FileAttributes.Normal;
+                return FileAttributes.Directory;
             }
             set { }
         }

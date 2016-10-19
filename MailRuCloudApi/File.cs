@@ -111,5 +111,9 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>File size.</value>
         internal FileSize PrimarySize { get; set; }
+
+        public DateTime CreationTimeUtc { get; set; }
+        public DateTime LastWriteTimeUtc { get; set; }
+        public DateTime LastAccessTimeUtc { get; set; }
     }
 }
