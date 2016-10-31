@@ -112,8 +112,29 @@ namespace MailRuCloudApi
         /// <value>File size.</value>
         internal FileSize PrimarySize { get; set; }
 
-        public DateTime CreationTimeUtc { get; set; }
-        public DateTime LastWriteTimeUtc { get; set; }
-        public DateTime LastAccessTimeUtc { get; set; }
+        public DateTime CreationTimeUtc
+        {
+            get
+            {
+                return DateTime.Now.AddDays(-1);
+            }
+            set { }
+        }
+        public DateTime LastWriteTimeUtc
+        {
+            get
+            {
+                return DateTime.Now.AddDays(-1);
+            }
+            set { }
+        }
+        public DateTime LastAccessTimeUtc
+        {
+            get
+            {
+                return DateTime.Now.AddDays(-1);
+            }
+            set { }
+        }
     }
 }
