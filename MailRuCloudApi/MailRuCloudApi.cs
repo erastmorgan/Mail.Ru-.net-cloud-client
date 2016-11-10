@@ -294,16 +294,19 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> CreateFolder(string name, string createIn)
         {
-            return await AddFileInCloud(new File
-            {
-                Name = name,
-                FullPath = createIn.EndsWith("/") ? createIn + name : createIn + "/" + name,
-                Hash = null,
-                Size = new FileSize
-                {
-                    DefaultValue = 0
-                }
-            });
+            return
+                await
+                    AddFileInCloud(new File(createIn.EndsWith("/") ? createIn + name : createIn + "/" + name, 0,
+                        FileType.SingleFile, null));
+            //{
+            //    //Name = name,
+            //    FullPath = createIn.EndsWith("/") ? createIn + name : createIn + "/" + name,
+            //    Hash = null,
+            //    Size = new FileSize
+            //    {
+            //        DefaultValue = 0
+            //    }
+            //});
         }
 
         /// <summary>
@@ -509,17 +512,17 @@ namespace MailRuCloudApi
                     var fileBytes = await this.GetFile(file);
                     var conf = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
 
-                    tempFiles.Add(new File()
-                    {
-                        Name = conf.OriginalFileName,
-                        Size = new FileSize()
-                        {
-                            DefaultValue = conf.Size
-                        },
-                        FullPath = file.FullPath,
-                        Type = FileType.MultiFile,
-                        PrimaryName = file.PrimaryName
-                    });
+                    tempFiles.Add(new File(file.FullPath, conf.Size, FileType.MultiFile, null));
+                    //{
+                    //    //Name = conf.OriginalFileName,
+                    //    Size = new FileSize()
+                    //    {
+                    //        DefaultValue = conf.Size
+                    //    },
+                    //    FullPath = file.FullPath,
+                    //    Type = FileType.MultiFile,
+                    //    PrimaryName = file.PrimaryName
+                    //});
 
                     multiFileParts.AddRange(conf.Parts);
                 }
@@ -777,10 +780,7 @@ namespace MailRuCloudApi
                 {
                     token.ThrowIfCancellationRequested();
 
-                    if (outputStream != null)
-                    {
-                        outputStream.Write(fileBytes, totalBytesRead, bytesRead);
-                    }
+                    outputStream?.Write(fileBytes, totalBytesRead, bytesRead);
 
                     totalBytesRead += bytesRead;
 
@@ -914,16 +914,19 @@ namespace MailRuCloudApi
                                     var hashResult = resp[0];
                                     var sizeResult = long.Parse(resp[1].Replace("\r\n", string.Empty));
 
-                                    return this.AddFileInCloud(new File()
-                                    {
-                                        Name = fileName,
-                                        FullPath = HttpUtility.UrlDecode(destinationPath) + fileName,
-                                        Hash = hashResult,
-                                        Size = new FileSize()
-                                        {
-                                            DefaultValue = sizeResult
-                                        }
-                                    }).Result;
+
+                                    var f = new File(HttpUtility.UrlDecode(destinationPath) + fileName, sizeResult, FileType.SingleFile, hashResult);
+                                    return AddFileInCloud(f).Result;
+                                    //return this.AddFileInCloud(new File()
+                                    //{
+                                    //    //Name = fileName,
+                                    //    FullPath = HttpUtility.UrlDecode(destinationPath) + fileName,
+                                    //    Hash = hashResult,
+                                    //    Size = new FileSize()
+                                    //    {
+                                    //        DefaultValue = sizeResult
+                                    //    }
+                                    //}).Result;
                                 }
                             }
                         }
@@ -1261,12 +1264,15 @@ namespace MailRuCloudApi
                     var newConfName = this.MoveOrCopy(fileInfo.PrimaryName, fileInfo.FullPath, destPath, needMove).Result;
                     if (result = newConfName != fileInfo.PrimaryName)
                     {
-                        result = this.Remove(new File()
-                        {
-                            Name = newConfName,
-                            FullPath = destPath.EndsWith("/") ? destPath + newConfName : destPath + "/" + newConfName,
-                            Type = FileType.SingleFile
-                        }).Result;
+
+                        var f = new File(destPath.EndsWith("/") ? destPath + newConfName : destPath + "/" + newConfName, 0, FileType.SingleFile, null);
+                        result = Remove(f).Result;
+                        //result = this.Remove(new File()
+                        //{
+                        //    //Name = newConfName,
+                        //    FullPath = destPath.EndsWith("/") ? destPath + newConfName : destPath + "/" + newConfName,
+                        //    Type = FileType.SingleFile
+                        //}).Result;
 
                         if (result)
                         {

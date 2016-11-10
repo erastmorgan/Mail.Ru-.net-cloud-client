@@ -31,6 +31,18 @@ namespace MailRuCloudApi
     /// </summary>
     public class File
     {
+        public File(string fullPath, long size, FileType fileType, string hash)
+        {
+            FullPath = fullPath;
+            Size = new FileSize
+            {
+                DefaultValue = size
+            };
+            Type = fileType;
+            Hash = hash;
+        }
+
+
         private string _fullPath;
         private string _name;
 
@@ -40,12 +52,16 @@ namespace MailRuCloudApi
         /// <value>File name.</value>
         public string Name
         {
-            get { return _name; }
-            set
+            get
             {
-                if (value.Contains("/") || value.Contains("\\")) throw new InvalidEnumArgumentException(nameof(Name));
-                _name = value;
+                //return _name;
+                return FullPath.Substring(FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1);
             }
+            //set
+            //{
+            //    if (value.Contains("/") || value.Contains("\\")) throw new InvalidEnumArgumentException(nameof(Name));
+            //    _name = value;
+            //}
         }
 
         public string Extension => System.IO.Path.GetExtension(Name);
@@ -110,7 +126,7 @@ namespace MailRuCloudApi
         /// Gets or sets base file size.
         /// </summary>
         /// <value>File size.</value>
-        internal FileSize PrimarySize { get; set; }
+        internal FileSize PrimarySize => Size;
 
         public DateTime CreationTimeUtc
         {

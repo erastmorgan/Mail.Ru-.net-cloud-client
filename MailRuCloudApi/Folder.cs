@@ -61,7 +61,7 @@ namespace MailRuCloudApi
         {
             get
             {
-                if (FullPath == "/") return "\\";
+                if (FullPath == "/") return "";
                 return FullPath.TrimEnd('/').Remove(0, FullPath.LastIndexOf('/') + 1);
                 //Substring(FullPath.LastIndexOf('/') + 1, FullPath.Length - 1);
 
