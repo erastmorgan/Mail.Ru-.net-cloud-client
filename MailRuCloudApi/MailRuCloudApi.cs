@@ -21,7 +21,7 @@ namespace MailRuCloudApi
     using System.Xml.Serialization;
 
 
-
+    /// <summary>
     /// Cloud client.
     /// </summary>
     public class MailRuCloud
@@ -29,7 +29,7 @@ namespace MailRuCloudApi
         /// <summary>
         /// Async tasks cancelation token.
         /// </summary>
-        private CancellationTokenSource cancelToken = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancelToken = new CancellationTokenSource();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MailRuCloud" /> class. Do not forget to set Account property before using any API functions.
@@ -45,8 +45,8 @@ namespace MailRuCloudApi
         /// <param name="password">Password, associated with this email.</param>
         public MailRuCloud(string login, string password)
         {
-            this.Account = new Account(login, password);
-            if (!this.Account.Login())
+            Account = new Account(login, password);
+            if (!Account.Login())
             {
                 throw new Exception("Auth token has't been retrieved.");
             }
@@ -68,7 +68,7 @@ namespace MailRuCloudApi
         /// </summary>
         public void AbortAllAsyncThreads()
         {
-            this.cancelToken.Cancel(true);
+            _cancelToken.Cancel(true);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(Folder folder, Entry destinationEntry)
         {
-            return await this.Copy(folder, destinationEntry.FullPath);
+            return await Copy(folder, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(Folder folder, Folder destinationFolder)
         {
-            return await this.Copy(folder, destinationFolder.FullPath);
+            return await Copy(folder, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(Folder folder, string destinationPath)
         {
-            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FullPath, destinationPath, false));
+            return !string.IsNullOrEmpty(await MoveOrCopy(folder.Name, folder.FullPath, destinationPath, false));
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(File file, Entry destinationEntry)
         {
-            return await this.Copy(file, destinationEntry.FullPath);
+            return await Copy(file, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(File file, Folder destinationFolder)
         {
-            return await this.Copy(file, destinationFolder.FullPath);
+            return await Copy(file, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -134,14 +134,14 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Copy(File file, string destinationPath)
         {
-            var result = false;
+            bool result;
             if (file.Type == FileType.MultiFile)
             {
-                result = await this.MoveOrCopyMultiFile(file, destinationPath, false);
+                result = await MoveOrCopyMultiFile(file, destinationPath, false);
             }
             else
             {
-                result = !string.IsNullOrEmpty(await this.MoveOrCopy(file.Name, file.FullPath, destinationPath, false));
+                result = !string.IsNullOrEmpty(await MoveOrCopy(file.Name, file.FullPath, destinationPath, false));
             }
 
             return result;
@@ -155,7 +155,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Rename(Folder folder, string newFileName)
         {
-            return await this.Rename(folder.Name, folder.FullPath, newFileName);
+            return await Rename(folder.Name, folder.FullPath, newFileName);
         }
 
         /// <summary>
@@ -166,30 +166,29 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Rename(File file, string newFileName)
         {
-            var result = false;
+            bool result;
             if (file.Type == FileType.MultiFile)
             {
                 file.Type = FileType.SingleFile;
-                var fileBytes = await this.GetFile(file, false);
-                var conf = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
-                var sourcePath = file.FullPath.Substring(0, file.FullPath.LastIndexOf("/") + 1);
-                var parts = conf.Parts.ToList();
+                var fileBytes = await GetFile(file, false);
+                var conf = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                var sourcePath = file.FullPath.Substring(0, file.FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1);
 
                 foreach (var item in conf.Parts)
                 {
                     var newPartName = item.OriginalFileName.Replace(file.Name, newFileName);
-                    result = await this.Rename(item.OriginalFileName, sourcePath + item.OriginalFileName, newPartName);
+                    result = await Rename(item.OriginalFileName, sourcePath + item.OriginalFileName, newPartName);
                 }
 
                 conf.Parts.ToList().ForEach(x => x.OriginalFileName = x.OriginalFileName.Replace(file.Name, newFileName));
-                var remove = this.Remove(file);
+                var remove = Remove(file);
                 if (result = await remove)
                 {
                     var newConfName = file.PrimaryName.Replace(file.Name, newFileName);
                     conf.OriginalFileName = newFileName;
                     var tempFile = Path.GetTempFileName();
-                    System.IO.File.WriteAllText(tempFile, this.GenerateMultiFileConfig(conf));
-                    result = await this.UploadFile(newConfName, tempFile, string.Empty, 0, new FileInfo(tempFile).Length, sourcePath, false);
+                    System.IO.File.WriteAllText(tempFile, GenerateMultiFileConfig(conf));
+                    result = await UploadFile(newConfName, tempFile, string.Empty, 0, new FileInfo(tempFile).Length, sourcePath, false);
                     if (System.IO.File.Exists(tempFile))
                     {
                         try
@@ -198,13 +197,14 @@ namespace MailRuCloudApi
                         }
                         catch
                         {
+                            // ignored
                         }
                     }
                 }
             }
             else
             {
-                result = await this.Rename(file.Name, file.FullPath, newFileName);
+                result = await Rename(file.Name, file.FullPath, newFileName);
             }
 
             return result;
@@ -218,7 +218,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(Folder folder, Folder destinationFolder)
         {
-            return await this.Move(folder, destinationFolder.FullPath);
+            return await Move(folder, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(Folder folder, Entry destinationEntry)
         {
-            return await this.Move(folder, destinationEntry.FullPath);
+            return await Move(folder, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -240,7 +240,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(Folder folder, string destinationPath)
         {
-            return !string.IsNullOrEmpty(await this.MoveOrCopy(folder.Name, folder.FullPath, destinationPath, true));
+            return !string.IsNullOrEmpty(await MoveOrCopy(folder.Name, folder.FullPath, destinationPath, true));
         }
 
         /// <summary>
@@ -251,7 +251,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(File file, Entry destinationEntry)
         {
-            return await this.Move(file, destinationEntry.FullPath);
+            return await Move(file, destinationEntry.FullPath);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(File file, Folder destinationFolder)
         {
-            return await this.Move(file, destinationFolder.FullPath);
+            return await Move(file, destinationFolder.FullPath);
         }
 
         /// <summary>
@@ -273,14 +273,14 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Move(File file, string destinationPath)
         {
-            var result = false;
+            bool result;
             if (file.Type == FileType.MultiFile)
             {
-                result = await this.MoveOrCopyMultiFile(file, destinationPath, true);
+                result = await MoveOrCopyMultiFile(file, destinationPath, true);
             }
             else
             {
-                result = !string.IsNullOrEmpty(await this.MoveOrCopy(file.Name, file.FullPath, destinationPath, true));
+                result = !string.IsNullOrEmpty(await MoveOrCopy(file.Name, file.FullPath, destinationPath, true));
             }
 
             return result;
@@ -316,23 +316,23 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Remove(File file)
         {
-            var result = false;
+            bool result;
             if (file.Type == FileType.MultiFile)
             {
                 file.Type = FileType.SingleFile;
-                var fileBytes = await this.GetFile(file, false);
-                var conf = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
-                var sourcePath = file.FullPath.Substring(0, file.FullPath.LastIndexOf("/") + 1);
+                var fileBytes = await GetFile(file, false);
+                var conf = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                var sourcePath = file.FullPath.Substring(0, file.FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1);
                 foreach (var item in conf.Parts)
                 {
-                    result = await this.Remove(sourcePath + item.OriginalFileName);
+                    result = await Remove(sourcePath + item.OriginalFileName);
                 }
 
-                result = await this.Remove(file.FullPath);
+                result = await Remove(file.FullPath);
             }
             else
             {
-                result = await this.Remove(file.FullPath);
+                result = await Remove(file.FullPath);
             }
 
             return result;
@@ -345,7 +345,7 @@ namespace MailRuCloudApi
         /// <returns>True or false operation result.</returns>
         public async Task<bool> Remove(Folder folder)
         {
-            return await this.Remove(folder.FullPath);
+            return await Remove(folder.FullPath);
         }
 
         /// <summary>
@@ -362,12 +362,12 @@ namespace MailRuCloudApi
             }
 
             CookieContainer cookie = null;
-            var shard = await this.GetShardInfo(ShardType.WeblinkGet, true, cookie);
-            var addFileRequest = Encoding.UTF8.GetBytes(string.Format("api={0}", 2));
+            var shard = await GetShardInfo(ShardType.WeblinkGet, true, cookie);
+            var addFileRequest = Encoding.UTF8.GetBytes($"api={2}");
 
-            var url = new Uri(string.Format("{0}/api/v2/tokens/download", ConstSettings.CloudDomain));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/tokens/download");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
+            request.Proxy = Account.Proxy;
             request.CookieContainer = cookie;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
@@ -377,7 +377,7 @@ namespace MailRuCloudApi
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -390,8 +390,8 @@ namespace MailRuCloudApi
                             throw new Exception();
                         }
 
-                        var token = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Token);
-                        return string.Format("{0}/{1}?key={2}", shard.Url, publishLink.Replace(ConstSettings.PublishFileLink, string.Empty), token);
+                        var token = (string)JsonParser.Parse(ReadResponseAsText(response), PObject.Token);
+                        return $"{shard.Url}/{publishLink.Replace(ConstSettings.PublishFileLink, string.Empty)}?key={token}";
                     }
                 }
             });
@@ -409,7 +409,7 @@ namespace MailRuCloudApi
                 return false;
             }
 
-            return (await this.PublishUnpulishLink(file.Name, file.FullPath, false, file.PublicLink)).ToUpper() == file.FullPath.ToUpper();
+            return (await PublishUnpulishLink(file.Name, file.FullPath, false, file.PublicLink)).ToUpper() == file.FullPath.ToUpper();
         }
 
         /// <summary>
@@ -419,7 +419,7 @@ namespace MailRuCloudApi
         /// <returns>True or false result of the operation.</returns>
         public async Task<bool> UnpublishLink(Folder folder)
         {
-            return (await this.PublishUnpulishLink(folder.Name, folder.FullPath, false, folder.PublicLink)).ToUpper() == folder.FullPath.ToUpper();
+            return (await PublishUnpulishLink(folder.Name, folder.FullPath, false, folder.PublicLink)).ToUpper() == folder.FullPath.ToUpper();
         }
 
         /// <summary>
@@ -434,7 +434,7 @@ namespace MailRuCloudApi
                 return string.Empty;
             }
 
-            return await this.PublishUnpulishLink(file.Name, file.FullPath, true, null);
+            return await PublishUnpulishLink(file.Name, file.FullPath, true, null);
         }
 
         /// <summary>
@@ -444,7 +444,7 @@ namespace MailRuCloudApi
         /// <returns>Public folder link.</returns>
         public async Task<string> GetPublishLink(Folder folder)
         {
-            return await this.PublishUnpulishLink(folder.Name, folder.FullPath, true, null);
+            return await PublishUnpulishLink(folder.Name, folder.FullPath, true, null);
         }
 
         /// <summary>
@@ -454,7 +454,7 @@ namespace MailRuCloudApi
         /// <returns>List of the items.</returns>
         public async Task<Entry> GetItems(Folder folder)
         {
-            return await this.GetItems(folder.FullPath);
+            return await GetItems(folder.FullPath);
         }
 
         /// <summary>
@@ -464,29 +464,30 @@ namespace MailRuCloudApi
         /// <returns>List of the items.</returns>
         public async Task<Entry> GetItems(string path)
         {
-            this.CheckAuth();
+            CheckAuth();
             if (string.IsNullOrEmpty(path))
             {
                 path = "/";
             }
 
-            var uri = new Uri(string.Format("{0}/api/v2/folder?token={1}&home={2}", ConstSettings.CloudDomain, this.Account.AuthToken, HttpUtility.UrlEncode(path)));
+            var uri = new Uri(
+                $"{ConstSettings.CloudDomain}/api/v2/folder?token={Account.AuthToken}&home={HttpUtility.UrlEncode(path)}");
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
             Entry entry = null;
             var result = await task.ContinueWith((t) =>
             {
                 using (var response = t.Result as HttpWebResponse)
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    if (response != null && response.StatusCode == HttpStatusCode.OK)
                     {
-                        entry = (Entry)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Entry);
+                        entry = (Entry)JsonParser.Parse(ReadResponseAsText(response), PObject.Entry);
                         return true;
                     }
                     else
@@ -509,8 +510,8 @@ namespace MailRuCloudApi
                 var multiFileParts = new List<MultiFilePart>();
                 foreach (var file in multiFileConfigs)
                 {
-                    var fileBytes = await this.GetFile(file);
-                    var conf = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                    var fileBytes = await GetFile(file);
+                    var conf = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
 
                     tempFiles.Add(new File(file.FullPath, conf.Size, FileType.MultiFile, null));
                     //{
@@ -550,8 +551,8 @@ namespace MailRuCloudApi
             MultiFile multiFile = null;
             if (file.Type == FileType.MultiFile)
             {
-                var fileBytes = (byte[])(await this.GetFile(new[] { file.FullPath }, null, null, 0));
-                multiFile = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                var fileBytes = (byte[])(await GetFile(new[] { file.FullPath }, null, null));
+                multiFile = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
             }
 
             var taskAction = new object[] { file, destinationPath, multiFile };
@@ -560,15 +561,15 @@ namespace MailRuCloudApi
             {
                 var param = action as object[];
                 var fileInfo = param[0] as File;
-                var filePaths = new string[] { fileInfo.FullPath };
+                var filePaths = new[] { fileInfo.FullPath };
 
                 if (fileInfo.Type == FileType.MultiFile)
                 {
-                    var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName));
+                    var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName, StringComparison.Ordinal));
                     filePaths = (param[2] as MultiFile).Parts.OrderBy(v => v.Order).Select(x => folder + x.OriginalFileName).ToArray();
                 }
 
-                return (bool)this.GetFile(filePaths, fileInfo.Name, param[1] as string, fileInfo.Size.DefaultValue).Result;
+                return (bool)GetFile(filePaths, fileInfo.Name, param[1] as string, fileInfo.Size.DefaultValue).Result;
             },
             taskAction);
         }
@@ -584,8 +585,8 @@ namespace MailRuCloudApi
             MultiFile multiFile = null;
             if (file.Type == FileType.MultiFile)
             {
-                var fileBytes = (byte[])(await this.GetFile(new[] { file.FullPath }, null, null, 0));
-                multiFile = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                var fileBytes = (byte[])await GetFile(new[] { file.FullPath }, null, null);
+                multiFile = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
             }
 
             var taskAction = new object[] { file, multiFile };
@@ -594,15 +595,15 @@ namespace MailRuCloudApi
             {
                 var param = action as object[];
                 var fileInfo = param[0] as File;
-                var filePaths = new string[] { fileInfo.FullPath };
+                var filePaths = new[] { fileInfo.FullPath };
 
                 if (fileInfo.Type == FileType.MultiFile)
                 {
-                    var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName));
+                    var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName, StringComparison.Ordinal));
                     filePaths = (param[1] as MultiFile).Parts.OrderBy(v => v.Order).Select(x => folder + x.OriginalFileName).ToArray();
                 }
 
-                return (byte[])this.GetFile(filePaths, null, null, includeProgressEvent ? fileInfo.Size.DefaultValue : 0).Result;
+                return (byte[])GetFile(filePaths, null, null, includeProgressEvent ? fileInfo.Size.DefaultValue : 0).Result;
             },
             taskAction);
         }
@@ -614,7 +615,7 @@ namespace MailRuCloudApi
             CheckAuth();
             CookieContainer cookie = Account.Cookies;
             var shard = await GetShardInfo(ShardType.Get, true, cookie);
-            Stream stream = new DownloadStream(file, shard, Account, cancelToken);
+            Stream stream = new DownloadStream(file, shard, Account, _cancelToken);
             return stream;
 
 
@@ -647,10 +648,10 @@ namespace MailRuCloudApi
 
         public Stream GetUploadStream(string fileName, string destinationPath, string extension, long size)
         {
-            this.CheckAuth();
-            var shard = this.GetShardInfo(ShardType.Upload).Result;
+            CheckAuth();
+            var shard = GetShardInfo(ShardType.Upload).Result;
 
-            var res = new UploadStream(fileName, destinationPath, shard, Account, cancelToken, size);
+            var res = new UploadStream(fileName, destinationPath, shard, Account, _cancelToken, size);
 
             return res;
         }
@@ -666,11 +667,11 @@ namespace MailRuCloudApi
             var maxFileSize = 2L * 1000L * 1000L * 1000L;
             if (maxFileSize >= file.Length)
             {
-                return await this.UploadFile(file.Name, file.FullName, file.Extension, 0, file.Length, destinationPath, true);
+                return await UploadFile(file.Name, file.FullName, file.Extension, 0, file.Length, destinationPath, true);
             }
 
             var diffLength = maxFileSize;
-            var result = true;
+            bool result;
             var curPosition = 0L;
             var guid = Guid.NewGuid().ToString();
             var partCount = 1;
@@ -682,8 +683,8 @@ namespace MailRuCloudApi
                     diffLength = file.Length - curPosition;
                 }
 
-                var partName = string.Format("{0}-{1}-.Multifile-Part{2}", file.Name, guid, partCount);
-                if (!(result = await this.UploadFile(partName, file.FullName, string.Empty, curPosition, diffLength, destinationPath, true)))
+                var partName = $"{file.Name}-{guid}-.Multifile-Part{partCount}";
+                if (!(result = await UploadFile(partName, file.FullName, string.Empty, curPosition, diffLength, destinationPath, true)))
                 {
                     return result;
                 }
@@ -699,7 +700,7 @@ namespace MailRuCloudApi
                 partCount++;
             }
 
-            var multiFileConf = this.GenerateMultiFileConfig(new MultiFile()
+            var multiFileConf = GenerateMultiFileConfig(new MultiFile()
             {
                 OriginalFileName = file.Name,
                 Size = file.Length,
@@ -708,7 +709,7 @@ namespace MailRuCloudApi
 
             var tempFile = Path.GetTempFileName();
             System.IO.File.WriteAllText(tempFile, multiFileConf);
-            result = await this.UploadFile(string.Format("{0}-{1}-.Multifile-Parts-Config", file.Name, guid), tempFile, string.Empty, 0, new FileInfo(tempFile).Length, destinationPath, false);
+            result = await UploadFile($"{file.Name}-{guid}-.Multifile-Parts-Config", tempFile, string.Empty, 0, new FileInfo(tempFile).Length, destinationPath, false);
             if (System.IO.File.Exists(tempFile))
             {
                 try
@@ -717,6 +718,7 @@ namespace MailRuCloudApi
                 }
                 catch
                 {
+                    // ignored
                 }
             }
 
@@ -734,7 +736,7 @@ namespace MailRuCloudApi
             {
                 try
                 {
-                    this.ReadResponseAsByte(resp, this.cancelToken.Token, stream);
+                    ReadResponseAsByte(resp, _cancelToken.Token, stream);
                     return Encoding.UTF8.GetString(stream.ToArray());
                 }
                 catch
@@ -764,7 +766,7 @@ namespace MailRuCloudApi
 
             using (var reader = new BinaryReader(resp.GetResponseStream()))
             {
-                int bytesRead = 0;
+                int bytesRead;
                 while ((bytesRead = reader.Read(fileBytes, totalBytesRead, totalBufSize - totalBytesRead)) > 0)
                 {
                     token.ThrowIfCancellationRequested();
@@ -785,7 +787,7 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                            OnChangedProgressPercent(new ProgressChangedEventArgs(
                                 (int)percentComplete,
                                 new ProgressChangeTaskState()
                                 {
@@ -805,7 +807,7 @@ namespace MailRuCloudApi
 
                 if (contentLength != 0 && outputStream.Position == contentLength)
                 {
-                    this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                    OnChangedProgressPercent(new ProgressChangedEventArgs(
                                 100,
                                 new ProgressChangeTaskState()
                                 {
@@ -849,11 +851,12 @@ namespace MailRuCloudApi
             var maxFileSize = 2L * 1024L * 1024L * 1024L;
             if (size > maxFileSize)
             {
-                throw new OverflowException("Not supported file size.", new Exception(string.Format("The maximum file size is {0} byte. Currently file size is {1} byte.", maxFileSize, size)));
+                throw new OverflowException("Not supported file size.", new Exception(
+                    $"The maximum file size is {maxFileSize} byte. Currently file size is {size} byte."));
             }
 
-            this.CheckAuth();
-            var shard = await this.GetShardInfo(ShardType.Upload);
+            CheckAuth();
+            var shard = await GetShardInfo(ShardType.Upload);
             var boundary = Guid.NewGuid();
 
             //// Boundary request building.
@@ -868,21 +871,21 @@ namespace MailRuCloudApi
             var endBoundaryRequest = Encoding.UTF8.GetBytes(endBoundaryBuilder.ToString());
             var boundaryRequest = Encoding.UTF8.GetBytes(boundaryBuilder.ToString());
 
-            var url = new Uri(string.Format("{0}?cloud_domain=2&{1}", shard.Url, this.Account.LoginName));
+            var url = new Uri($"{shard.Url}?cloud_domain=2&{Account.LoginName}");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = size + boundaryRequest.LongLength + endBoundaryRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(destinationPath));
+            request.Referer = $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(destinationPath)}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
-            request.ContentType = string.Format("multipart/form-data; boundary=----{0}", boundary.ToString());
+            request.ContentType = $"multipart/form-data; boundary=----{boundary}";
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
             request.AllowWriteStreamBuffering = false;
 
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith(
                 (t, m) =>
                 {
@@ -891,15 +894,15 @@ namespace MailRuCloudApi
                         var token = (CancellationToken)m;
                         using (var s = t.Result)
                         {
-                            this.WriteBytesInStream(boundaryRequest, s, token);
-                            this.WriteBytesInStream(fullFilePath, startPosition, size, s, token, includeProgressEvent, OperationType.Upload);
-                            this.WriteBytesInStream(endBoundaryRequest, s, token);
+                            WriteBytesInStream(boundaryRequest, s, token);
+                            WriteBytesInStream(fullFilePath, startPosition, size, s, token, includeProgressEvent, OperationType.Upload);
+                            WriteBytesInStream(endBoundaryRequest, s, token);
 
                             using (var response = (HttpWebResponse)request.GetResponse())
                             {
                                 if (response.StatusCode == HttpStatusCode.OK)
                                 {
-                                    var resp = ReadResponseAsText(response).Split(new char[] { ';' });
+                                    var resp = ReadResponseAsText(response).Split(';');
                                     var hashResult = resp[0];
                                     var sizeResult = long.Parse(resp[1].Replace("\r\n", string.Empty));
 
@@ -926,15 +929,12 @@ namespace MailRuCloudApi
                     }
                     finally
                     {
-                        if (t.Result != null)
-                        {
-                            t.Result.Dispose();
-                        }
+                        t.Result?.Dispose();
                     }
 
                     return true;
                 },
-            this.cancelToken.Token);
+            _cancelToken.Token);
         }
 
         /// <summary>
@@ -947,8 +947,8 @@ namespace MailRuCloudApi
         /// <returns>File as byte array.</returns>
         private async Task<object> GetFile(string[] sourceFullFilePaths, string fileName, string destinationPath, long contentLength = 0)
         {
-            this.CheckAuth();
-            var shard = await this.GetShardInfo(ShardType.Get);
+            CheckAuth();
+            var shard = await GetShardInfo(ShardType.Get);
             destinationPath = destinationPath == null || destinationPath.EndsWith(@"\") ? destinationPath : destinationPath + @"\";
             FileStream fileStream = null;
             MemoryStream memoryStream = null;
@@ -963,15 +963,15 @@ namespace MailRuCloudApi
 
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, sourceFile.TrimStart('/')));
-                request.Proxy = this.Account.Proxy;
-                request.CookieContainer = this.Account.Cookies;
+                var request = (HttpWebRequest)WebRequest.Create($"{shard.Url}{sourceFile.TrimStart('/')}");
+                request.Proxy = Account.Proxy;
+                request.CookieContainer = Account.Cookies;
                 request.Method = "GET";
                 request.ContentType = ConstSettings.DefaultRequestType;
                 request.Accept = ConstSettings.DefaultAcceptType;
                 request.UserAgent = ConstSettings.UserAgent;
                 request.AllowReadStreamBuffering = false;
-                var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
+                var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
                 await task.ContinueWith(
                     (t, m) =>
                 {
@@ -993,29 +993,28 @@ namespace MailRuCloudApi
                                 }
                                 catch
                                 {
+                                    // ignored
                                 }
                             }
 
                             return false as object;
                         }
                     }
-                    else
+
+                    try
                     {
-                        try
-                        {
-                            ReadResponseAsByte(t.Result, token, memoryStream, contentLength, OperationType.Download);
-                            return memoryStream.ToArray() as object;
-                        }
-                        catch
-                        {
-                            return null;
-                        }
+                        ReadResponseAsByte(t.Result, token, memoryStream, contentLength, OperationType.Download);
+                        return memoryStream.ToArray() as object;
+                    }
+                    catch
+                    {
+                        return null;
                     }
                 },
-                this.cancelToken.Token);
+                _cancelToken.Token);
             }
 
-            var result = destinationPath != null && fileName != null ? fileStream.Length > 0 as object : memoryStream.ToArray() as object;
+            var result = destinationPath != null && fileName != null ? fileStream.Length > 0 : memoryStream.ToArray() as object;
             if (fileStream != null)
             {
                 fileStream.Dispose();
@@ -1029,48 +1028,6 @@ namespace MailRuCloudApi
             }
 
             return result;
-        }
-
-
-
-        private async Task<object> GetFileStream(string[] sourceFullFilePaths, long contentLength = 0)
-        {
-            this.CheckAuth();
-            var shard = await this.GetShardInfo(ShardType.Get);
-            MemoryStream memoryStream = null;
-            memoryStream = new MemoryStream();
-
-            foreach (var sourceFile in sourceFullFilePaths)
-            {
-                var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}{1}", shard.Url, sourceFile.TrimStart('/')));
-                request.Proxy = this.Account.Proxy;
-                request.CookieContainer = this.Account.Cookies;
-                request.Method = "GET";
-                request.ContentType = ConstSettings.DefaultRequestType;
-                request.Accept = ConstSettings.DefaultAcceptType;
-                request.UserAgent = ConstSettings.UserAgent;
-                request.AllowReadStreamBuffering = false;
-                var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
-                await task.ContinueWith(
-                    (t, m) =>
-                    {
-                        var token = (CancellationToken)m;
-                        {
-                            try
-                            {
-                                ReadResponseAsByte(t.Result, token, memoryStream, contentLength, OperationType.Download);
-                                return memoryStream;
-                            }
-                            catch
-                            {
-                                return null;
-                            }
-                        }
-                    },
-                cancelToken.Token, TaskContinuationOptions.OnlyOnRanToCompletion);
-            }
-
-            return memoryStream;
         }
 
 
@@ -1089,24 +1046,24 @@ namespace MailRuCloudApi
                 "{5}={0}&api={1}&token={2}&email={3}&x-email={4}",
                 publish ? fullPath : publishLink.Replace(ConstSettings.PublishFileLink, string.Empty),
                 2,
-                this.Account.AuthToken,
-                this.Account.LoginName,
-                this.Account.LoginName,
+                Account.AuthToken,
+                Account.LoginName,
+                Account.LoginName,
                 publish ? "home" : "weblink"));
 
-            var url = new Uri(string.Format("{0}/api/v2/file/{1}", ConstSettings.CloudDomain, publish ? "publish" : "unpublish"));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/{(publish ? "publish" : "unpublish")}");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, fullPath.Substring(0, fullPath.LastIndexOf(name)));
+            request.Referer = $"{ConstSettings.CloudDomain}/home{fullPath.Substring(0, fullPath.LastIndexOf(name, StringComparison.Ordinal))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -1116,7 +1073,7 @@ namespace MailRuCloudApi
                     {
                         if (response.StatusCode == HttpStatusCode.OK)
                         {
-                            var publicLink = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.BodyAsString);
+                            var publicLink = (string)JsonParser.Parse(ReadResponseAsText(response), PObject.BodyAsString);
                             if (publish)
                             {
                                 return ConstSettings.PublishFileLink + publicLink;
@@ -1142,21 +1099,21 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         private async Task<bool> Rename(string name, string fullPath, string newName)
         {
-            var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&name={4}", fullPath, 2, this.Account.AuthToken, this.Account.LoginName, newName));
+            var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&name={4}", fullPath, 2, Account.AuthToken, Account.LoginName, newName));
 
-            var url = new Uri(string.Format("{0}/api/v2/file/rename", ConstSettings.CloudDomain));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/rename");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = moveRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, fullPath.Substring(0, fullPath.LastIndexOf(name)));
+            request.Referer = $"{ConstSettings.CloudDomain}/home{fullPath.Substring(0, fullPath.LastIndexOf(name, StringComparison.Ordinal))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -1185,21 +1142,22 @@ namespace MailRuCloudApi
         /// <returns>New created file name.</returns>
         private async Task<string> MoveOrCopy(string sourceName, string sourceFullPath, string destinationPath, bool move)
         {
-            var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&folder={4}", sourceFullPath, 2, this.Account.AuthToken, this.Account.LoginName, destinationPath));
+            var moveRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&folder={4}", sourceFullPath, 2, Account.AuthToken, Account.LoginName, destinationPath));
 
-            var url = new Uri(string.Format("{0}/api/v2/file/{1}", ConstSettings.CloudDomain, move ? "move" : "copy"));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/{(move ? "move" : "copy")}");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = moveRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, sourceFullPath.Substring(0, sourceFullPath.LastIndexOf(sourceName)));
+            request.Referer =
+                $"{ConstSettings.CloudDomain}/home{sourceFullPath.Substring(0, sourceFullPath.LastIndexOf(sourceName, StringComparison.Ordinal))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -1212,8 +1170,8 @@ namespace MailRuCloudApi
                             throw new Exception();
                         }
 
-                        var result = (string)JsonParser.Parse(this.ReadResponseAsText(response), PObject.BodyAsString);
-                        return result.Substring(result.LastIndexOf("/") + 1);
+                        var result = (string)JsonParser.Parse(ReadResponseAsText(response), PObject.BodyAsString);
+                        return result.Substring(result.LastIndexOf("/", StringComparison.Ordinal) + 1);
                     }
                 }
             });
@@ -1237,48 +1195,42 @@ namespace MailRuCloudApi
                     var destPath = param[1] as string;
                     var needMove = (bool)param[2];
 
-                    var result = false;
+                    bool result;
                     fileInfo.Type = FileType.SingleFile;
-                    var fileBytes = this.GetFile(fileInfo, false).Result;
-                    var conf = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
-                    var sourcePath = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName));
+                    var fileBytes = GetFile(fileInfo, false).Result;
+                    var conf = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+                    var sourcePath = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName, StringComparison.Ordinal));
                     var newParts = new Dictionary<string, string>();
                     foreach (var item in conf.Parts)
                     {
-                        var newPart = this.MoveOrCopy(item.OriginalFileName, sourcePath + item.OriginalFileName, destPath, needMove).Result;
+                        var newPart = MoveOrCopy(item.OriginalFileName, sourcePath + item.OriginalFileName, destPath, needMove).Result;
                         newParts.Add(item.OriginalFileName, newPart);
                     }
 
                     conf.Parts.ToList().ForEach(x => x.OriginalFileName = newParts[x.OriginalFileName]);
-                    var newConfName = this.MoveOrCopy(fileInfo.PrimaryName, fileInfo.FullPath, destPath, needMove).Result;
+                    var newConfName = MoveOrCopy(fileInfo.PrimaryName, fileInfo.FullPath, destPath, needMove).Result;
                     if (result = newConfName != fileInfo.PrimaryName)
                     {
 
                         var f = new File(destPath.EndsWith("/") ? destPath + newConfName : destPath + "/" + newConfName, 0, FileType.SingleFile, null);
                         result = Remove(f).Result;
-                        //result = this.Remove(new File()
-                        //{
-                        //    //Name = newConfName,
-                        //    FullPath = destPath.EndsWith("/") ? destPath + newConfName : destPath + "/" + newConfName,
-                        //    Type = FileType.SingleFile
-                        //}).Result;
 
                         if (result)
                         {
-                            var oldCopySuffixIndex = fileInfo.PrimaryName.LastIndexOf(" (");
+                            var oldCopySuffixIndex = fileInfo.PrimaryName.LastIndexOf(" (", StringComparison.Ordinal);
                             var oldCopySuffix = oldCopySuffixIndex != -1 && fileInfo.PrimaryName.EndsWith(")") ? fileInfo.PrimaryName.Substring(oldCopySuffixIndex) : string.Empty;
                             if (oldCopySuffix != string.Empty)
                             {
                                 conf.OriginalFileName = conf.OriginalFileName.Replace(oldCopySuffix, string.Empty);
                             }
 
-                            var copySuffix = newConfName.Substring(newConfName.LastIndexOf(" ("));
-                            var extIndex = conf.OriginalFileName.LastIndexOf(".");
+                            var copySuffix = newConfName.Substring(newConfName.LastIndexOf(" (", StringComparison.Ordinal));
+                            var extIndex = conf.OriginalFileName.LastIndexOf(".", StringComparison.Ordinal);
                             var ext = extIndex != -1 ? conf.OriginalFileName.Substring(extIndex) : string.Empty;
                             conf.OriginalFileName = extIndex != -1 ? conf.OriginalFileName.Substring(0, extIndex) + copySuffix + ext : conf.OriginalFileName + copySuffix;
                             var tempFile = Path.GetTempFileName();
-                            System.IO.File.WriteAllText(tempFile, this.GenerateMultiFileConfig(conf));
-                            result = this.UploadFile(newConfName, tempFile, string.Empty, 0, new FileInfo(tempFile).Length, destPath, false).Result;
+                            System.IO.File.WriteAllText(tempFile, GenerateMultiFileConfig(conf));
+                            result = UploadFile(newConfName, tempFile, string.Empty, 0, new FileInfo(tempFile).Length, destPath, false).Result;
                             if (System.IO.File.Exists(tempFile))
                             {
                                 try
@@ -1287,6 +1239,7 @@ namespace MailRuCloudApi
                                 }
                                 catch
                                 {
+                                    // ignored
                                 }
                             }
                         }
@@ -1304,21 +1257,21 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         private async Task<bool> Remove(string fullPath)
         {
-            var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", HttpUtility.UrlEncode(fullPath), 2, this.Account.AuthToken, this.Account.LoginName));
+            var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", HttpUtility.UrlEncode(fullPath), 2, Account.AuthToken, Account.LoginName));
 
-            var url = new Uri(string.Format("{0}/api/v2/file/remove", ConstSettings.CloudDomain));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/remove");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = removeRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, fullPath.Substring(0, fullPath.LastIndexOf("/") + 1));
+            request.Referer = $"{ConstSettings.CloudDomain}/home{fullPath.Substring(0, fullPath.LastIndexOf("/", StringComparison.Ordinal) + 1)}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -1345,22 +1298,24 @@ namespace MailRuCloudApi
         private  async Task<bool> AddFileInCloud(File fileInfo)
         {
             var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
-            var filePart = hasFile ? string.Format("&hash={0}&size={1}", fileInfo.Hash, fileInfo.Size.DefaultValue) : string.Empty;
-            var addFileRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&conflict=rename&api={1}&token={2}", HttpUtility.UrlEncode(fileInfo.FullPath), 2, this.Account.AuthToken) + filePart);
+            var filePart = hasFile ? $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}" : string.Empty;
+            var addFileRequest = Encoding.UTF8.GetBytes(
+                $"home={HttpUtility.UrlEncode(fileInfo.FullPath)}&conflict=rename&api={2}&token={Account.AuthToken}" + filePart);
 
-            var url = new Uri(string.Format("{0}/api/v2/{1}/add", ConstSettings.CloudDomain, hasFile ? "file" : "folder"));
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/{(hasFile ? "file" : "folder")}/add");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.Name))));
+            request.Referer =
+                $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.Name, StringComparison.Ordinal)))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "*/*";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var s = t.Result)
@@ -1396,7 +1351,7 @@ namespace MailRuCloudApi
                 using (var source = new BinaryReader(stream))
                 {
                     source.BaseStream.Seek(startPosition, SeekOrigin.Begin);
-                    this.WriteBytesInStream(source, outputStream, token, size, includeProgressEvent, operation);
+                    WriteBytesInStream(source, outputStream, token, size, includeProgressEvent, operation);
                 }
             }
         }
@@ -1414,7 +1369,7 @@ namespace MailRuCloudApi
         {
             if (includeProgressEvent && (sourceStream.BaseStream.Length == length || sourceStream.BaseStream.Position == 0))
             {
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                OnChangedProgressPercent(new ProgressChangedEventArgs(
                                 0,
                                 new ProgressChangeTaskState()
                                 {
@@ -1458,7 +1413,7 @@ namespace MailRuCloudApi
                         if (tempPercentComplete - percentComplete >= 1)
                         {
                             percentComplete = tempPercentComplete;
-                            this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                            OnChangedProgressPercent(new ProgressChangedEventArgs(
                                 (int)percentComplete,
                                 new ProgressChangeTaskState()
                                 {
@@ -1479,7 +1434,7 @@ namespace MailRuCloudApi
 
             if (includeProgressEvent && (sourceStream.BaseStream.Length == length || sourceStream.BaseStream.Position == sourceStream.BaseStream.Length))
             {
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(
+                OnChangedProgressPercent(new ProgressChangedEventArgs(
                                 100,
                                 new ProgressChangeTaskState()
                                 {
@@ -1510,7 +1465,7 @@ namespace MailRuCloudApi
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    this.WriteBytesInStream(source, outputStream, token, bytes.LongLength, includeProgressEvent, operation);
+                    WriteBytesInStream(source, outputStream, token, bytes.LongLength, includeProgressEvent, operation);
                 }
             }
         }
@@ -1523,7 +1478,7 @@ namespace MailRuCloudApi
         private async Task<ShardInfo> GetShardInfo(ShardType shardType)
         {
             CookieContainer cookie = null;
-            return await this.GetShardInfo(shardType, false, cookie);
+            return await GetShardInfo(shardType, false, cookie);
         }
 
         /// <summary>
@@ -1535,29 +1490,26 @@ namespace MailRuCloudApi
         /// <returns>Shard info.</returns>
         private async Task<ShardInfo> GetShardInfo(ShardType shardType, bool useAnonymousUser, CookieContainer cookie)
         {
-            this.CheckAuth();
-            var uri = new Uri(string.Format("{0}/api/v2/dispatcher?{2}={1}", ConstSettings.CloudDomain, !useAnonymousUser ? this.Account.AuthToken : 2.ToString(), !useAnonymousUser ? "token" : "api"));
+            CheckAuth();
+            var uri = new Uri(string.Format("{0}/api/v2/dispatcher?{2}={1}", ConstSettings.CloudDomain, !useAnonymousUser ? Account.AuthToken : 2.ToString(), !useAnonymousUser ? "token" : "api"));
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
-            request.Proxy = this.Account.Proxy;
+            request.Proxy = Account.Proxy;
             request.CookieContainer = !useAnonymousUser ? Account.Cookies : new CookieContainer();
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
-            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), (object)null);
+            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
             return await task.ContinueWith((t) =>
             {
                 using (var response = t.Result as HttpWebResponse)
                 {
-                    if (response.StatusCode == HttpStatusCode.OK)
+                    if (response != null && response.StatusCode == HttpStatusCode.OK)
                     {
                         cookie = request.CookieContainer;
-                        return (ShardInfo)JsonParser.Parse(this.ReadResponseAsText(response), PObject.Shard, shardType.GetEnumDescription());
+                        return (ShardInfo)JsonParser.Parse(ReadResponseAsText(response), PObject.Shard, shardType.GetEnumDescription());
                     }
-                    else
-                    {
-                        throw new Exception();
-                    }
+                    throw new Exception();
                 }
             });
         }
@@ -1567,14 +1519,14 @@ namespace MailRuCloudApi
         /// </summary>
         private void CheckAuth()
         {
-            if (this.Account == null)
+            if (Account == null)
             {
                 throw new Exception("Account is null or empty");
             }
 
-            if (string.IsNullOrEmpty(this.Account.AuthToken))
+            if (string.IsNullOrEmpty(Account.AuthToken))
             {
-                if (!this.Account.Login())
+                if (!Account.Login())
                 {
                     throw new Exception("Auth token has't been retrieved.");
                 }
@@ -1588,7 +1540,7 @@ namespace MailRuCloudApi
         /// <returns>XML content.</returns>
         private string GenerateMultiFileConfig(MultiFile multiFile)
         {
-            string result = string.Empty;
+            string result;
             var serializer = new XmlSerializer(typeof(MultiFile));
             using (var writer = new StringWriter())
             {
@@ -1606,7 +1558,7 @@ namespace MailRuCloudApi
         /// <returns>Deserialized object.</returns>
         private MultiFile DeserializeMultiFileConfig(string xml)
         {
-            var data = new MultiFile();
+            MultiFile data;
             using (var reader = new StringReader(xml))
             {
                 var serializer = new XmlSerializer(typeof(MultiFile));
