@@ -611,30 +611,37 @@ namespace MailRuCloudApi
 
         public async Task<Stream> GetFileStream(File file, bool includeProgressEvent = true)
         {
-            MultiFile multiFile = null;
-            if (file.Type == FileType.MultiFile)
-            {
-                var fileBytes = (byte[])(await this.GetFile(new[] { file.FullPath }, null, null, 0));
-                multiFile = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
-            }
+            CheckAuth();
+            CookieContainer cookie = Account.Cookies;
+            var shard = await GetShardInfo(ShardType.Get, true, cookie);
+            Stream stream = new DownloadStream(file, shard, Account, cancelToken);
+            return stream;
 
-            var taskAction = new object[] { file, multiFile };
-            return await Task.Factory.StartNew(
-                (action) =>
-                {
-                    var param = action as object[];
-                    var fileInfo = param[0] as File;
-                    var filePaths = new string[] { fileInfo.FullPath };
 
-                    if (fileInfo.Type == FileType.MultiFile)
-                    {
-                        var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName));
-                        filePaths = (param[1] as MultiFile).Parts.OrderBy(v => v.Order).Select(x => folder + x.OriginalFileName).ToArray();
-                    }
+            //MultiFile multiFile = null;
+            //if (file.Type == FileType.MultiFile)
+            //{
+            //    var fileBytes = (byte[])(await this.GetFile(new[] { file.FullPath }, null, null, 0));
+            //    multiFile = this.DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
+            //}
 
-                    return this.GetFileStream(filePaths, includeProgressEvent ? fileInfo.Size.DefaultValue : 0).Result as Stream;
-                },
-            taskAction);
+            //var taskAction = new object[] { file, multiFile };
+            //return await Task.Factory.StartNew(
+            //    (action) =>
+            //    {
+            //        var param = action as object[];
+            //        var fileInfo = param[0] as File;
+            //        var filePaths = new string[] { fileInfo.FullPath };
+
+            //        if (fileInfo.Type == FileType.MultiFile)
+            //        {
+            //            var folder = fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.PrimaryName));
+            //            filePaths = (param[1] as MultiFile).Parts.OrderBy(v => v.Order).Select(x => folder + x.OriginalFileName).ToArray();
+            //        }
+
+            //        return this.GetFileStream(filePaths, includeProgressEvent ? fileInfo.Size.DefaultValue : 0).Result as Stream;
+            //    },
+            //taskAction);
         }
 
 
@@ -643,7 +650,7 @@ namespace MailRuCloudApi
             this.CheckAuth();
             var shard = this.GetShardInfo(ShardType.Upload).Result;
 
-            var res = new MailRuCloudStream(fileName, destinationPath, shard, Account, cancelToken, size);
+            var res = new UploadStream(fileName, destinationPath, shard, Account, cancelToken, size);
 
             return res;
         }
@@ -748,24 +755,6 @@ namespace MailRuCloudApi
         /// <param name="operation">Currently operation type.</param>
         internal void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null, long contentLength = 0, OperationType operation = OperationType.None)
         {
-            if (contentLength != 0 && outputStream.Position == 0)
-            {
-                this.OnChangedProgressPercent(new ProgressChangedEventArgs(
-                                0,
-                                new ProgressChangeTaskState()
-                                {
-                                    Type = operation,
-                                    TotalBytes = new FileSize()
-                                    {
-                                        DefaultValue = contentLength
-                                    },
-                                    BytesInProgress = new FileSize()
-                                    {
-                                        DefaultValue = 0L
-                                    }
-                                }));
-            }
-
             int bufSizeChunk = 30000;
             int totalBufSize = bufSizeChunk;
             byte[] fileBytes = new byte[totalBufSize];
