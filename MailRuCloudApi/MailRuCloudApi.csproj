@@ -62,6 +62,7 @@
     <Compile Include="Folder.cs" />
     <Compile Include="JsonParser.cs" />
     <Compile Include="MailRuCloudApi.cs" />
+    <Compile Include="RingBufferedStream.cs" />
     <Compile Include="UploadStream.cs" />
     <Compile Include="MultiFile.cs" />
     <Compile Include="MultiFilePart.cs">

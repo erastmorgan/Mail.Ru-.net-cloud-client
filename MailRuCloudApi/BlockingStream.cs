@@ -182,8 +182,7 @@ namespace MailRuCloudApi
 
             lock (mBuffer)
             {
-                //while (!ReadAvailable(count))
-                while (!ReadAvailable(1))  //!ReadAvailable(1) || !FinishedWrite
+                while (!ReadAvailable(count)) //while (!ReadAvailable(1))  //!ReadAvailable(1) || !FinishedWrite
                     Monitor.Wait(mBuffer);
 
                 // fill the read buffer

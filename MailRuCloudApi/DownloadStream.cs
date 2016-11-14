@@ -18,7 +18,8 @@ namespace MailRuCloudApi
         private readonly Account _account;
         private readonly CancellationTokenSource _cancelToken;
 
-        private readonly PipeStream _innerStream = new PipeStream();
+        private readonly RingBufferedStream _innerStream = new RingBufferedStream(3000000);
+        //private readonly PipeStream _innerStream = new PipeStream();
         //private readonly MemoryStream _innerStream = new MemoryStream();
 
 
