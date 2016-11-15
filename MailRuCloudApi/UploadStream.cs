@@ -278,37 +278,21 @@ namespace MailRuCloudApi
             }
         }
 
-        private void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null, long contentLength = 0, OperationType operation = OperationType.None)
+        private void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null)
         {
-            if (!Enum.IsDefined(typeof (OperationType), operation))
-                throw new ArgumentOutOfRangeException(nameof(operation));
-
-            int bufSizeChunk = 30000;
-            int totalBufSize = bufSizeChunk;
-            byte[] fileBytes = new byte[totalBufSize];
-            double percentComplete = 0;
-
-            int totalBytesRead = 0;
-
-            using (var reader = new BinaryReader(resp.GetResponseStream()))
+            using (Stream responseStream = resp.GetResponseStream())
             {
+                var buffer = new byte[65536];
                 int bytesRead;
-                while ((bytesRead = reader.Read(fileBytes, totalBytesRead, totalBufSize - totalBytesRead)) > 0)
+
+                while (responseStream != null && (bytesRead = responseStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     token.ThrowIfCancellationRequested();
-
-                    outputStream?.Write(fileBytes, totalBytesRead, bytesRead);
-
-                    totalBytesRead += bytesRead;
-
-                    if ((totalBufSize - totalBytesRead) == 0)
-                    {
-                        totalBufSize += bufSizeChunk;
-                        Array.Resize(ref fileBytes, totalBufSize);
-                    }
+                    outputStream?.Write(buffer, 0, bytesRead);
                 }
             }
         }
+
 
         private long WriteBytesInStream(byte[] bytes, Stream outputStream, CancellationToken token, long length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
         {

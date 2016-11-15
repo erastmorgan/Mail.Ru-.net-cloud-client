@@ -490,10 +490,7 @@ namespace MailRuCloudApi
                         entry = (Entry)JsonParser.Parse(ReadResponseAsText(response), PObject.Entry);
                         return true;
                     }
-                    else
-                    {
-                        throw new Exception();
-                    }
+                    throw new Exception();
                 }
             });
 
