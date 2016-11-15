@@ -157,6 +157,7 @@ namespace MailRuCloudApi
 
                 while (responseStream != null && (bytesRead = responseStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
+                    token.ThrowIfCancellationRequested();
                     outputStream?.Write(buffer, 0, bytesRead);
                 }
             }
