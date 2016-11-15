@@ -121,24 +121,19 @@ namespace MailRuCloudApi
                         }
                         else if (type == "file")
                         {
-                            var f = new File(path, size, FileType.SingleFile, (string)item["hash"]);
+                            var filetime = UnixTimeStampToDateTime((long)item["mtime"]);
+
+                            var f = new File(path, size, FileType.SingleFile, (string) item["hash"])
+                            {
+                                PublicLink = weblink,
+                                PrimaryName = name,
+
+                                CreationTimeUtc = filetime,
+                                LastAccessTimeUtc = filetime,
+                                LastWriteTimeUtc = filetime
+                            };
+                            
                             files.Add(f);
-                            //{
-                            //    Size = new FileSize()
-                            //    {
-                            //        DefaultValue = size
-                            //    },
-                            //    FullPath = path,
-                            //    //Name = name,
-                            //    Hash = (string)item["hash"],
-                            //    PublicLink = weblink,
-                            //    Type = FileType.SingleFile,
-                            //    PrimaryName = name,
-                            //    PrimarySize = new FileSize()
-                            //    {
-                            //        DefaultValue = size
-                            //    }
-                            //});
                         }
                     }
 
@@ -159,6 +154,14 @@ namespace MailRuCloudApi
             }
 
             return null;
+        }
+
+        private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
+        {
+            // Unix timestamp is seconds past epoch
+            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
+            return dtDateTime;
         }
 
         /// <summary>
