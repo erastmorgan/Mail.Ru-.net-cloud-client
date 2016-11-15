@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,26 +11,26 @@ namespace MailRuCloudApi
     /// </summary>
     public class RingBufferedStream : Stream
     {
-        private readonly byte[] store;
+        private readonly byte[] _store;
 
-        private readonly ManualResetEventAsync writeAvailable
-            = new ManualResetEventAsync(false);
+        private readonly ManualResetEventAsync _writeAvailable = new ManualResetEventAsync(false);
 
-        private readonly ManualResetEventAsync readAvailable
-            = new ManualResetEventAsync(false);
+        private readonly ManualResetEventAsync _readAvailable = new ManualResetEventAsync(false);
 
-        private readonly CancellationTokenSource cancellationTokenSource
-            = new CancellationTokenSource();
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
-        private int readPos;
+        private int _readPos;
 
-        private int readAvailableByteCount;
+        private int _readAvailableByteCount;
 
-        private int writePos;
+        private int _writePos;
 
-        private int writeAvailableByteCount;
+        private int _writeAvailableByteCount;
 
-        private bool disposed;
+        private bool _disposed;
+
+
+        private bool _flushed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RingBufferedStream"/>
@@ -44,9 +41,9 @@ namespace MailRuCloudApi
         /// </param>
         public RingBufferedStream(int bufferSize)
         {
-            this.store = new byte[bufferSize];
-            this.writeAvailableByteCount = bufferSize;
-            this.readAvailableByteCount = 0;
+            _store = new byte[bufferSize];
+            _writeAvailableByteCount = bufferSize;
+            _readAvailableByteCount = 0;
         }
 
         /// <inheritdoc/>
@@ -93,12 +90,13 @@ namespace MailRuCloudApi
         /// <summary>
         /// Gets the number of bytes currently buffered.
         /// </summary>
-        public int BufferedByteCount => this.readAvailableByteCount;
+        public int BufferedByteCount => _readAvailableByteCount;
 
         /// <inheritdoc/>
         public override void Flush()
         {
-            // nothing to do
+            _flushed = true;
+            _readAvailable.Set();
         }
 
         /// <summary>
@@ -136,64 +134,52 @@ namespace MailRuCloudApi
         /// <inheritdoc/>
         public override void Write(byte[] buffer, int offset, int count)
         {
-            if (this.disposed)
+            if (_disposed)
             {
                 throw new ObjectDisposedException("RingBufferedStream");
             }
 
-            Monitor.Enter(this.store);
+            Monitor.Enter(_store);
             bool haveLock = true;
             try
             {
                 while (count > 0)
                 {
-                    if (this.writeAvailableByteCount == 0)
+                    if (_writeAvailableByteCount == 0)
                     {
-                        this.writeAvailable.Reset();
-                        Monitor.Exit(this.store);
+                        _writeAvailable.Reset();
+                        Monitor.Exit(_store);
                         haveLock = false;
                         bool canceled;
-                        if (!this.writeAvailable.Wait(
-                            this.WriteTimeout,
-                            this.cancellationTokenSource.Token,
-                            out canceled) || canceled)
+                        if (!_writeAvailable.Wait(WriteTimeout, _cancellationTokenSource.Token, out canceled) || canceled)
                         {
                             break;
                         }
 
-                        Monitor.Enter(this.store);
+                        Monitor.Enter(_store);
                         haveLock = true;
                     }
                     else
                     {
-                        var toWrite = this.store.Length - this.writePos;
-                        if (toWrite > this.writeAvailableByteCount)
+                        var toWrite = _store.Length - _writePos;
+                        if (toWrite > _writeAvailableByteCount)
                         {
-                            toWrite = this.writeAvailableByteCount;
+                            toWrite = _writeAvailableByteCount;
                         }
 
                         if (toWrite > count)
-                        {
                             toWrite = count;
-                        }
 
-                        Array.Copy(
-                            buffer,
-                            offset,
-                            this.store,
-                            this.writePos,
-                            toWrite);
+                        Array.Copy(buffer, offset, _store, _writePos, toWrite);
                         offset += toWrite;
                         count -= toWrite;
-                        this.writeAvailableByteCount -= toWrite;
-                        this.readAvailableByteCount += toWrite;
-                        this.writePos += toWrite;
-                        if (this.writePos == this.store.Length)
-                        {
-                            this.writePos = 0;
-                        }
+                        _writeAvailableByteCount -= toWrite;
+                        _readAvailableByteCount += toWrite;
+                        _writePos += toWrite;
+                        if (_writePos == _store.Length)
+                            _writePos = 0;
 
-                        this.readAvailable.Set();
+                        _readAvailable.Set();
                     }
                 }
             }
@@ -201,7 +187,7 @@ namespace MailRuCloudApi
             {
                 if (haveLock)
                 {
-                    Monitor.Exit(this.store);
+                    Monitor.Exit(_store);
                 }
             }
         }
@@ -209,46 +195,37 @@ namespace MailRuCloudApi
         /// <inheritdoc/>
         public override void WriteByte(byte value)
         {
-            if (this.disposed)
-            {
+            if (_disposed)
                 throw new ObjectDisposedException("RingBufferedStream");
-            }
 
-            Monitor.Enter(this.store);
+            Monitor.Enter(_store);
             bool haveLock = true;
             try
             {
                 while (true)
                 {
-                    if (this.writeAvailableByteCount == 0)
+                    if (_writeAvailableByteCount == 0)
                     {
-                        this.writeAvailable.Reset();
-                        Monitor.Exit(this.store);
+                        _writeAvailable.Reset();
+                        Monitor.Exit(_store);
                         haveLock = false;
                         bool canceled;
-                        if (!this.writeAvailable.Wait(
-                            this.WriteTimeout,
-                            this.cancellationTokenSource.Token,
-                            out canceled) || canceled)
-                        {
+                        if (!_writeAvailable.Wait(WriteTimeout, _cancellationTokenSource.Token, out canceled) || canceled)
                             break;
-                        }
 
-                        Monitor.Enter(this.store);
+                        Monitor.Enter(_store);
                         haveLock = true;
                     }
                     else
                     {
-                        this.store[this.writePos] = value;
-                        --this.writeAvailableByteCount;
-                        ++this.readAvailableByteCount;
-                        ++this.writePos;
-                        if (this.writePos == this.store.Length)
-                        {
-                            this.writePos = 0;
-                        }
+                        _store[_writePos] = value;
+                        --_writeAvailableByteCount;
+                        ++_readAvailableByteCount;
+                        ++_writePos;
+                        if (_writePos == _store.Length)
+                            _writePos = 0;
 
-                        this.readAvailable.Set();
+                        _readAvailable.Set();
                         break;
                     }
                 }
@@ -257,7 +234,7 @@ namespace MailRuCloudApi
             {
                 if (haveLock)
                 {
-                    Monitor.Exit(this.store);
+                    Monitor.Exit(_store);
                 }
             }
         }
@@ -265,75 +242,57 @@ namespace MailRuCloudApi
         /// <inheritdoc/>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (this.disposed)
-            {
+            if (_disposed)
                 throw new ObjectDisposedException("RingBufferedStream");
-            }
 
-            Monitor.Enter(this.store);
+            Monitor.Enter(_store);
             int ret = 0;
             bool haveLock = true;
             try
             {
-                while (count > 0)
+                while (count > 0 )
                 {
-                    if (this.readAvailableByteCount == 0)
+                    if (_readAvailableByteCount == 0 && !_flushed)
                     {
-                        this.readAvailable.Reset();
-                        Monitor.Exit(this.store);
+                        _readAvailable.Reset();
+                        Monitor.Exit(_store);
                         haveLock = false;
                         bool canceled;
-                        if (!this.readAvailable.Wait(
-                            this.ReadTimeout,
-                            this.cancellationTokenSource.Token,
-                            out canceled) || canceled)
-                        {
+                        if (!_readAvailable.Wait(ReadTimeout, _cancellationTokenSource.Token, out canceled) || canceled)
                             break;
-                        }
 
-                        Monitor.Enter(this.store);
+                        Monitor.Enter(_store);
                         haveLock = true;
                     }
                     else
                     {
-                        var toRead = this.store.Length - this.readPos;
-                        if (toRead > this.readAvailableByteCount)
-                        {
-                            toRead = this.readAvailableByteCount;
-                        }
+                        var toRead = _store.Length - _readPos;
+                        if (toRead > _readAvailableByteCount)
+                            toRead = _readAvailableByteCount;
 
                         if (toRead > count)
-                        {
                             toRead = count;
-                        }
 
-                        Array.Copy(
-                            this.store,
-                            this.readPos,
-                            buffer,
-                            offset,
-                            toRead);
+                        Array.Copy(_store, _readPos, buffer, offset, toRead);
                         offset += toRead;
                         count -= toRead;
-                        this.readAvailableByteCount -= toRead;
-                        this.writeAvailableByteCount += toRead;
+                        _readAvailableByteCount -= toRead;
+                        _writeAvailableByteCount += toRead;
                         ret += toRead;
-                        this.readPos += toRead;
-                        if (this.readPos == this.store.Length)
-                        {
-                            this.readPos = 0;
-                        }
+                        _readPos += toRead;
+                        if (_readPos == _store.Length)
+                            _readPos = 0;
 
-                        this.writeAvailable.Set();
+                        _writeAvailable.Set();
+
+                        if (_flushed) return ret;
                     }
                 }
             }
             finally
             {
                 if (haveLock)
-                {
-                    Monitor.Exit(this.store);
-                }
+                    Monitor.Exit(_store);
             }
 
             return ret;
@@ -342,47 +301,38 @@ namespace MailRuCloudApi
         /// <inheritdoc/>
         public override int ReadByte()
         {
-            if (this.disposed)
-            {
+            if (_disposed)
                 throw new ObjectDisposedException("RingBufferedStream");
-            }
 
-            Monitor.Enter(this.store);
+            Monitor.Enter(_store);
             int ret = -1;
             bool haveLock = true;
             try
             {
                 while (true)
                 {
-                    if (this.readAvailableByteCount == 0)
+                    if (_readAvailableByteCount == 0)
                     {
-                        this.readAvailable.Reset();
-                        Monitor.Exit(this.store);
+                        _readAvailable.Reset();
+                        Monitor.Exit(_store);
                         haveLock = false;
                         bool canceled;
-                        if (!this.readAvailable.Wait(
-                            this.ReadTimeout,
-                            this.cancellationTokenSource.Token,
-                            out canceled) || canceled)
-                        {
+                        if (!_readAvailable.Wait(ReadTimeout, _cancellationTokenSource.Token, out canceled) || canceled)
                             break;
-                        }
 
-                        Monitor.Enter(this.store);
+                        Monitor.Enter(_store);
                         haveLock = true;
                     }
                     else
                     {
-                        ret = this.store[this.readPos];
-                        ++this.writeAvailableByteCount;
-                        --this.readAvailableByteCount;
-                        ++this.readPos;
-                        if (this.readPos == this.store.Length)
-                        {
-                            this.readPos = 0;
-                        }
+                        ret = _store[_readPos];
+                        ++_writeAvailableByteCount;
+                        --_readAvailableByteCount;
+                        ++_readPos;
+                        if (_readPos == _store.Length)
+                            _readPos = 0;
 
-                        this.writeAvailable.Set();
+                        _writeAvailable.Set();
                         break;
                     }
                 }
@@ -390,9 +340,7 @@ namespace MailRuCloudApi
             finally
             {
                 if (haveLock)
-                {
-                    Monitor.Exit(this.store);
-                }
+                    Monitor.Exit(_store);
             }
 
             return ret;
@@ -403,8 +351,8 @@ namespace MailRuCloudApi
         {
             if (disposing)
             {
-                this.disposed = true;
-                this.cancellationTokenSource.Cancel();
+                _disposed = true;
+                _cancellationTokenSource.Cancel();
             }
 
             base.Dispose(disposing);
@@ -416,7 +364,7 @@ namespace MailRuCloudApi
         /// <summary>
         /// The task completion source.
         /// </summary>
-        private volatile TaskCompletionSource<bool> taskCompletionSource =
+        private volatile TaskCompletionSource<bool> _taskCompletionSource =
             new TaskCompletionSource<bool>();
 
         /// <summary>
@@ -432,7 +380,7 @@ namespace MailRuCloudApi
         {
             if (initialState)
             {
-                this.Set();
+                Set();
             }
         }
 
@@ -444,7 +392,7 @@ namespace MailRuCloudApi
         /// </returns>
         public Task GetWaitTask()
         {
-            return this.taskCompletionSource.Task;
+            return _taskCompletionSource.Task;
         }
 
         /// <summary>
@@ -452,7 +400,7 @@ namespace MailRuCloudApi
         /// </summary>
         public void Set()
         {
-            var tcs = this.taskCompletionSource;
+            var tcs = _taskCompletionSource;
             Task.Factory.StartNew(
                 s => ((TaskCompletionSource<bool>)s).TrySetResult(true),
                 tcs,
@@ -469,11 +417,11 @@ namespace MailRuCloudApi
         {
             while (true)
             {
-                var tcs = this.taskCompletionSource;
+                var tcs = _taskCompletionSource;
                 if (!tcs.Task.IsCompleted
 #pragma warning disable 420
                 || Interlocked.CompareExchange(
-                        ref this.taskCompletionSource,
+                        ref _taskCompletionSource,
                         new TaskCompletionSource<bool>(),
                         tcs) == tcs)
 #pragma warning restore 420
@@ -493,7 +441,7 @@ namespace MailRuCloudApi
         /// </exception>
         public void Wait()
         {
-            this.GetWaitTask().Wait();
+            GetWaitTask().Wait();
         }
 
         /// <summary>
@@ -513,7 +461,7 @@ namespace MailRuCloudApi
         /// </exception>
         public void Wait(CancellationToken cancellationToken)
         {
-            this.GetWaitTask().Wait(cancellationToken);
+            GetWaitTask().Wait(cancellationToken);
         }
 
         /// <summary>
@@ -531,7 +479,7 @@ namespace MailRuCloudApi
         {
             try
             {
-                this.GetWaitTask().Wait(cancellationToken);
+                GetWaitTask().Wait(cancellationToken);
                 canceled = false;
             }
             catch (Exception ex)
@@ -562,7 +510,7 @@ namespace MailRuCloudApi
         /// </exception>
         public bool Wait(TimeSpan timeout)
         {
-            return this.GetWaitTask().Wait(timeout);
+            return GetWaitTask().Wait(timeout);
         }
 
         /// <summary>
@@ -583,7 +531,7 @@ namespace MailRuCloudApi
         /// </exception>
         public bool Wait(int millisecondsTimeout)
         {
-            return this.GetWaitTask().Wait(millisecondsTimeout);
+            return GetWaitTask().Wait(millisecondsTimeout);
         }
 
         /// <summary>
@@ -616,7 +564,7 @@ namespace MailRuCloudApi
         /// </exception>
         public bool Wait(int millisecondsTimeout, CancellationToken cancellationToken)
         {
-            return this.GetWaitTask().Wait(millisecondsTimeout, cancellationToken);
+            return GetWaitTask().Wait(millisecondsTimeout, cancellationToken);
         }
 
         /// <summary>
@@ -651,7 +599,7 @@ namespace MailRuCloudApi
             bool ret = false;
             try
             {
-                ret = this.GetWaitTask().Wait(millisecondsTimeout, cancellationToken);
+                ret = GetWaitTask().Wait(millisecondsTimeout, cancellationToken);
                 canceled = false;
             }
             catch (Exception ex)

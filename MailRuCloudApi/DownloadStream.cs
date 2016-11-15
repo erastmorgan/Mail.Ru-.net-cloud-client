@@ -37,14 +37,15 @@ namespace MailRuCloudApi
             string[] filePaths;
             if (_file.Type == FileType.MultiFile)
             {
-                var fileBytes = (byte[])GetFile(new[] { _file.FullPath }).Result;
+                var fileBytes = (byte[]) GetFile(new[] {_file.FullPath}).Result;
                 var multiFile = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
 
-                var folder = _file.FullPath.Substring(0, _file.FullPath.LastIndexOf(_file.PrimaryName, StringComparison.Ordinal));
+                var folder = _file.FullPath.Substring(0,
+                    _file.FullPath.LastIndexOf(_file.PrimaryName, StringComparison.Ordinal));
                 filePaths = multiFile.Parts.OrderBy(v => v.Order).Select(x => folder + x.OriginalFileName).ToArray();
             }
             else
-                filePaths = new[] { _file.FullPath };
+                filePaths = new[] {_file.FullPath};
 
             var t = GetFileStream(filePaths);
         }
@@ -55,7 +56,7 @@ namespace MailRuCloudApi
         {
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest)WebRequest.Create($"{_shard.Url}{sourceFile}");
+                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{sourceFile}");
                 request.Proxy = _account.Proxy;
                 request.CookieContainer = _account.Cookies;
                 request.Method = "GET";
@@ -63,24 +64,25 @@ namespace MailRuCloudApi
                 request.Accept = ConstSettings.DefaultAcceptType;
                 request.UserAgent = ConstSettings.UserAgent;
                 request.AllowReadStreamBuffering = false;
-                var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
+                var task = Task.Factory.FromAsync(request.BeginGetResponse,
+                    asyncResult => request.EndGetResponse(asyncResult), null);
                 await task.ContinueWith(
                     (t, m) =>
                     {
-                        var token = (CancellationToken)m;
+                        var token = (CancellationToken) m;
                         {
                             try
                             {
                                 ReadResponseAsByte(t.Result, token, _innerStream);
                                 return _innerStream;
                             }
-                            catch
+                            catch (Exception ex)
                             {
                                 return null;
                             }
                         }
                     },
-                _cancelToken.Token, TaskContinuationOptions.OnlyOnRanToCompletion);
+                    _cancelToken.Token, TaskContinuationOptions.OnlyOnRanToCompletion);
             }
 
             //_innerStream.Seek(0, SeekOrigin.Begin);
@@ -95,8 +97,8 @@ namespace MailRuCloudApi
             MultiFile data;
             using (var reader = new StringReader(xml))
             {
-                var serializer = new XmlSerializer(typeof(MultiFile));
-                data = (MultiFile)serializer.Deserialize(reader);
+                var serializer = new XmlSerializer(typeof (MultiFile));
+                data = (MultiFile) serializer.Deserialize(reader);
             }
 
             return data;
@@ -108,7 +110,7 @@ namespace MailRuCloudApi
 
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest)WebRequest.Create($"{_shard.Url}{sourceFile.TrimStart('/')}");
+                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{sourceFile.TrimStart('/')}");
                 request.Proxy = _account.Proxy;
                 request.CookieContainer = _account.Cookies;
                 request.Method = "GET";
@@ -116,11 +118,12 @@ namespace MailRuCloudApi
                 request.Accept = ConstSettings.DefaultAcceptType;
                 request.UserAgent = ConstSettings.UserAgent;
                 request.AllowReadStreamBuffering = false;
-                var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
+                var task = Task.Factory.FromAsync(request.BeginGetResponse,
+                    asyncResult => request.EndGetResponse(asyncResult), null);
                 await task.ContinueWith(
                     (t, m) =>
                     {
-                        var token = (CancellationToken)m;
+                        var token = (CancellationToken) m;
                         {
                             try
                             {
@@ -133,7 +136,7 @@ namespace MailRuCloudApi
                             }
                         }
                     },
-                _cancelToken.Token);
+                    _cancelToken.Token);
             }
 
             var result = memoryStream.ToArray() as object;
@@ -145,30 +148,16 @@ namespace MailRuCloudApi
         }
 
 
-        internal void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null)
+        private void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null)
         {
-            int bufSizeChunk = 30000;
-            int totalBufSize = bufSizeChunk;
-            byte[] fileBytes = new byte[totalBufSize];
-
-            int totalBytesRead = 0;
-
-            using (var reader = new BinaryReader(resp.GetResponseStream()))
+            using (Stream responseStream = resp.GetResponseStream())
             {
-                int bytesRead = 0;
-                while ((bytesRead = reader.Read(fileBytes, totalBytesRead, totalBufSize - totalBytesRead)) > 0)
+                var buffer = new byte[65536];
+                int bytesRead;
+
+                while (responseStream != null && (bytesRead = responseStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    token.ThrowIfCancellationRequested();
-
-                    outputStream?.Write(fileBytes, totalBytesRead, bytesRead);
-
-                    totalBytesRead += bytesRead;
-
-                    if (totalBufSize - totalBytesRead == 0)
-                    {
-                        totalBufSize += bufSizeChunk;
-                        Array.Resize(ref fileBytes, totalBufSize);
-                    }
+                    outputStream?.Write(buffer, 0, bytesRead);
                 }
             }
         }
