@@ -18,7 +18,7 @@ namespace MailRuCloudApi
         private readonly Account _account;
         private readonly CancellationTokenSource _cancelToken;
 
-        private readonly RingBufferedStream _innerStream = new RingBufferedStream(3000000);
+        private RingBufferedStream _innerStream;// = new RingBufferedStream(3000000);
         //private readonly PipeStream _innerStream = new PipeStream();
         //private readonly MemoryStream _innerStream = new MemoryStream();
 
@@ -47,6 +47,8 @@ namespace MailRuCloudApi
             else
                 filePaths = new[] {_file.FullPath};
 
+            _innerStream = new RingBufferedStream(65546);
+
             var t = GetFileStream(filePaths);
         }
 
@@ -54,6 +56,7 @@ namespace MailRuCloudApi
 
         private async Task<object> GetFileStream(string[] sourceFullFilePaths)
         {
+
             foreach (var sourceFile in sourceFullFilePaths)
             {
                 var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{sourceFile}");
@@ -192,9 +195,11 @@ namespace MailRuCloudApi
         }
 
         public override bool CanRead { get; } = true;
-        public override bool CanSeek { get; } = false;
+        public override bool CanSeek { get; } = true;
         public override bool CanWrite { get; } = false;
-        public override long Length { get; }
+
+        public override long Length => _file.Size?.DefaultValue ?? 0;
+
         public override long Position { get; set; }
     }
 }
