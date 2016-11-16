@@ -47,7 +47,7 @@ namespace MailRuCloudApi
             else
                 filePaths = new[] {_file.FullPath};
 
-            _innerStream = new RingBufferedStream(65546);
+            _innerStream = new RingBufferedStream(65536);
 
             var t = GetFileStream(filePaths);
         }
