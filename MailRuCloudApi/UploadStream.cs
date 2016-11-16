@@ -224,12 +224,15 @@ namespace MailRuCloudApi
 
         private async Task<bool> AddFileInCloud(File fileInfo, ResolveFileConflictMethod conflict = ResolveFileConflictMethod.Rewrite)
         {
-            var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
-            var filePart = hasFile ? $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}" : string.Empty;
+            //var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
+            //var filePart = hasFile ? $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}" : string.Empty;
+            var filePart = $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}";
 
-            var addFileRequest = Encoding.UTF8.GetBytes($"home={HttpUtility.UrlEncode(fileInfo.FullPath)}&conflict={GetConflictSolverParameter(conflict)}&api=2&token={_account.AuthToken}" + filePart);
+            string addFileString = $"home={HttpUtility.UrlEncode(fileInfo.FullPath)}&conflict={GetConflictSolverParameter(conflict)}&api=2&token={_account.AuthToken}" + filePart;
+            var addFileRequest = Encoding.UTF8.GetBytes(addFileString);
 
-            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/{(hasFile ? "file" : "folder")}/add");
+            //var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/{(hasFile ? "file" : "folder")}/add");
+            var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/add");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
             request.Proxy = _account.Proxy;
             request.CookieContainer = _account.Cookies;
