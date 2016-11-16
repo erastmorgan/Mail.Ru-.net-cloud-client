@@ -1254,7 +1254,9 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         private async Task<bool> Remove(string fullPath)
         {
-            var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", HttpUtility.UrlEncode(fullPath), 2, Account.AuthToken, Account.LoginName));
+
+            var removeString = string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}",HttpUtility.UrlEncode(fullPath), 2, Account.AuthToken, Account.LoginName);
+            var removeRequest = Encoding.UTF8.GetBytes(removeString);
 
             var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/remove");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
