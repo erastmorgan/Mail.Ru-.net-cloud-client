@@ -305,17 +305,14 @@ namespace MailRuCloudApi
             {
                 using (var source = new BinaryReader(stream))
                 {
-                    return WriteBytesInStream(source, outputStream, token, length, includeProgressEvent, operation);
+                    return WriteBytesInStream(source, outputStream, token, length);
                 }
             }
         }
 
-        private long WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, CancellationToken token, long length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
+        private long WriteBytesInStream(BinaryReader sourceStream, Stream outputStream, CancellationToken token, long length)
         {
-            if (!Enum.IsDefined(typeof (OperationType), operation))
-                throw new ArgumentOutOfRangeException(nameof(operation));
-
-            int bufferLength = 8192;
+            int bufferLength = 65536;
             var totalWritten = 0L;
             if (length < bufferLength)
             {
@@ -324,7 +321,6 @@ namespace MailRuCloudApi
             }
             else
             {
-                double percentComplete = 0;
                 while (length > totalWritten)
                 {
                     token.ThrowIfCancellationRequested();
