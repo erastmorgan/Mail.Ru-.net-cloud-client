@@ -17,18 +17,22 @@ namespace MailRuCloudApi
         private readonly ShardInfo _shard;
         private readonly Account _account;
         private readonly CancellationTokenSource _cancelToken;
+        private readonly long? _start;
+        private readonly long? _end;
 
         private RingBufferedStream _innerStream;// = new RingBufferedStream(3000000);
         //private readonly PipeStream _innerStream = new PipeStream();
         //private readonly MemoryStream _innerStream = new MemoryStream();
 
 
-        public DownloadStream(File file, ShardInfo shard, Account account, CancellationTokenSource cancelToken)
+        public DownloadStream(File file, ShardInfo shard, Account account, CancellationTokenSource cancelToken, long? start, long? end)
         {
             _file = file;
             _shard = shard;
             _account = account;
             _cancelToken = cancelToken;
+            _start = start;
+            _end = end;
             Initialize();
         }
 
@@ -67,6 +71,12 @@ namespace MailRuCloudApi
                 request.Accept = ConstSettings.DefaultAcceptType;
                 request.UserAgent = ConstSettings.UserAgent;
                 request.AllowReadStreamBuffering = false;
+
+                if (_start != null && _end != null)
+                {
+                    request.AddRange("bytes", _start.Value, _end.Value);
+                }
+
                 var task = Task.Factory.FromAsync(request.BeginGetResponse,
                     asyncResult => request.EndGetResponse(asyncResult), null);
                 await task.ContinueWith(
@@ -157,10 +167,18 @@ namespace MailRuCloudApi
             {
                 var buffer = new byte[65536];
                 int bytesRead;
+                int totalRead = 0;
 
                 while (responseStream != null && (bytesRead = responseStream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     token.ThrowIfCancellationRequested();
+
+                    if (totalRead + bytesRead > Length)
+                    {
+                        bytesRead = (int)(Length - totalRead);
+                    }
+                    totalRead += bytesRead;
+
                     outputStream?.Write(buffer, 0, bytesRead);
                 }
             }
@@ -198,7 +216,19 @@ namespace MailRuCloudApi
         public override bool CanSeek { get; } = true;
         public override bool CanWrite { get; } = false;
 
-        public override long Length => _file.Size?.DefaultValue ?? 0;
+        public override long Length {
+            get
+            {
+                if (_start != null && _end != null)
+                {
+                    var l = _end.Value - _start.Value;
+                    return l;
+                }
+
+                return _file.Size?.DefaultValue ?? 0; 
+                
+            }
+        }
 
         public override long Position { get; set; }
     }
