@@ -72,9 +72,14 @@ namespace MailRuCloudApi
                 request.UserAgent = ConstSettings.UserAgent;
                 request.AllowReadStreamBuffering = false;
 
-                if (_start != null && _end != null)
+                var length = _file.Size.DefaultValue;
+                if (_start != null)
                 {
-                    request.AddRange("bytes", _start.Value, _end.Value);
+                    var start = _start ?? 0;
+                    var end = Math.Min(_end ?? long.MaxValue, length - 1);
+                    length = end - start + 1;
+
+                    request.Headers.Add("Content-Range", $"bytes {start}-{end} / {length}");
                 }
 
                 var task = Task.Factory.FromAsync(request.BeginGetResponse,
@@ -160,6 +165,11 @@ namespace MailRuCloudApi
             return result;
         }
 
+        public override void Close()
+        {
+            _innerStream.Close();
+            base.Close();
+        }
 
         private void ReadResponseAsByte(WebResponse resp, CancellationToken token, Stream outputStream = null)
         {

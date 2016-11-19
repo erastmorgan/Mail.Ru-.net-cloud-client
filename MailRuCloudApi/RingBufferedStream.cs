@@ -298,6 +298,12 @@ namespace MailRuCloudApi
             return ret;
         }
 
+        public override void Close()
+        {
+            _cancellationTokenSource.Cancel();
+            base.Close();
+        }
+
         /// <inheritdoc/>
         public override int ReadByte()
         {
