@@ -457,6 +457,38 @@ namespace MailRuCloudApi
             return await GetItems(folder.FullPath);
         }
 
+
+        public async Task<Quota> GetQuota()
+        {
+            CheckAuth();
+            var uri = new Uri($"{ConstSettings.CloudDomain}/api/v2/user/space?token={Account.AuthToken}");
+            var request = (HttpWebRequest) WebRequest.Create(uri.OriginalString);
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
+            request.Method = "GET";
+            request.ContentType = ConstSettings.DefaultRequestType;
+            request.Accept = "application/json";
+            request.UserAgent = ConstSettings.UserAgent;
+            var task = Task.Factory.FromAsync(request.BeginGetResponse, asyncResult => request.EndGetResponse(asyncResult), null);
+            Quota quota = null;
+            var result = await task.ContinueWith((t) =>
+            {
+                using (var response = t.Result as HttpWebResponse)
+                {
+                    if (response != null && response.StatusCode == HttpStatusCode.OK)
+                    {
+                        string data = ReadResponseAsText(response);
+                        quota = (Quota) JsonParser.Parse(data, PObject.Quota);
+                        return true;
+                    }
+                    throw new Exception();
+                }
+            });
+
+            return quota;
+        }
+
+
         /// <summary>
         /// Get list of files and folders from account.
         /// </summary>

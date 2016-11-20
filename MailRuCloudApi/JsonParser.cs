@@ -38,7 +38,9 @@ namespace MailRuCloudApi
         /// <summary>
         /// Full body string.
         /// </summary>
-        BodyAsString = 3
+        BodyAsString = 3,
+
+        Quota = 10
     }
 
     /// <summary>
@@ -86,6 +88,19 @@ namespace MailRuCloudApi
             {
                 case PObject.Token:
                     return (string)parsedJObject["body"]["token"];
+
+                case PObject.Quota:
+                    var overQuota = (bool)parsedJObject["body"]["overquota"];
+                    var used = (long)parsedJObject["body"]["used"] * 1024 * 1024;
+                    var total = (long)parsedJObject["body"]["total"] * 1024 * 1024;
+                    return new Quota
+                    {
+                        OverQuota = overQuota,
+                        Total = total,
+                        Used = used
+                    };
+
+
                 case PObject.Entry:
                     var filesCount = (int)parsedJObject["body"]["count"]["files"];
                     var foldersCount = (int)parsedJObject["body"]["count"]["folders"];
