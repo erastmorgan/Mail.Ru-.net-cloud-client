@@ -1330,10 +1330,6 @@ namespace MailRuCloudApi
         private async Task<bool> Remove(string fullPath)
         {
 
-            try
-            {
-
-
             var removeString = string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", HttpUtility.UrlEncode(fullPath), 2, Account.AuthToken, Account.LoginName);
             var removeRequest = Encoding.UTF8.GetBytes(removeString);
 
@@ -1366,14 +1362,6 @@ namespace MailRuCloudApi
                     }
                 }
             });
-
-            }
-            catch (Exception exx)
-            {
-
-                throw;
-            }
-
         }
 
         /// <summary>
