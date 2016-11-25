@@ -302,15 +302,6 @@ namespace MailRuCloudApi
                 await
                     AddFileInCloud(new File(createIn.EndsWith("/") ? createIn + name : createIn + "/" + name, 0,
                         FileType.SingleFile, null));
-            //{
-            //    //Name = name,
-            //    FullPath = createIn.EndsWith("/") ? createIn + name : createIn + "/" + name,
-            //    Hash = null,
-            //    Size = new FileSize
-            //    {
-            //        DefaultValue = 0
-            //    }
-            //});
         }
 
         /// <summary>

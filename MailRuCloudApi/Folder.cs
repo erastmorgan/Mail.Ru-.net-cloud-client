@@ -57,16 +57,7 @@ namespace MailRuCloudApi
         /// Gets folder name.
         /// </summary>
         /// <value>Folder name.</value>
-        public string Name
-        {
-            get
-            {
-                if (FullPath == "/") return "";
-                return FullPath.TrimEnd('/').Remove(0, FullPath.LastIndexOf('/') + 1);
-                //Substring(FullPath.LastIndexOf('/') + 1, FullPath.Length - 1);
-
-            }
-        }
+        public string Name => FullPath == "/" ? "" : FullPath.TrimEnd('/').Remove(0, FullPath.LastIndexOf('/') + 1);
 
         /// <summary>
         /// Gets folder size.
