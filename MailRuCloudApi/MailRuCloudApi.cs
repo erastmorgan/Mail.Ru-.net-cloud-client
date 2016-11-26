@@ -666,12 +666,12 @@ namespace MailRuCloudApi
         }
 
 
-        public Stream GetUploadStream(string fileName, string destinationPath, string extension, long size)
+        public Stream GetUploadStream(string destinationPath, string extension, long size)
         {
             CheckAuth();
             var shard = GetShardInfo(ShardType.Upload).Result;
 
-            var res = new UploadStream(fileName, destinationPath, shard, Account, _cancelToken, size);
+            var res = new UploadStream(destinationPath, shard, Account, _cancelToken, size);
 
             return res;
         }

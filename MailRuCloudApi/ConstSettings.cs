@@ -13,14 +13,14 @@ namespace MailRuCloudApi
     /// <summary>
     /// Additional class to constant values.
     /// </summary>
-    internal class ConstSettings
+    public class ConstSettings
     {
         public const string Domain = "mail.ru";
         public const string CloudDomain = "https://cloud.mail.ru";
         public const string AuthDomen = "https://auth.mail.ru";
         public const string PublishFileLink = CloudDomain + "/public/";
 
-        public const string UserAgent = "Mozilla / 5.0(Windows; U; Windows NT 5.1; en - US; rv: 1.9.0.1) Gecko / 2008070208 Firefox / 3.0.1";
+        public static string UserAgent = "Mozilla / 5.0(Windows; U; Windows NT 5.1; en - US; rv: 1.9.0.1) Gecko / 2008070208 Firefox / 3.0.1";
         public const string DefaultAcceptType = "text / html,application / xhtml + xml,application / xml; q = 0.9,*/*;q=0.8";
         public const string DefaultRequestType = "application/x-www-form-urlencoded";
 

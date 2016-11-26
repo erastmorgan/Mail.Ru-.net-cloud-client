@@ -18,7 +18,7 @@ namespace MailRuCloudApi
 
         private readonly File _file;
 
-        public UploadStream(string fileName, string destinationPath, ShardInfo shard, Account account, CancellationTokenSource cancelToken, long size)
+        public UploadStream(string destinationPath, ShardInfo shard, Account account, CancellationTokenSource cancelToken, long size)
         {
             _file = new File(destinationPath, size, FileType.SingleFile, null);
 
@@ -36,10 +36,11 @@ namespace MailRuCloudApi
 
         private void Initialize()
         {
-            if (_file.Size.DefaultValue > MaxFileSize)
-            {
-                throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {MaxFileSize} byte. Currently file size is {_file.Size.DefaultValue} byte."));
-            }
+            // we don't know, free or paid account, so maybe later
+            //if (_file.Size.DefaultValue > MaxFileSize)
+            //{
+            //    throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {MaxFileSize} byte. Currently file size is {_file.Size.DefaultValue} byte."));
+            //}
 
             var boundary = Guid.NewGuid();
 
