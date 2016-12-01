@@ -1017,7 +1017,8 @@ namespace MailRuCloudApi
                             try
                             {
                                 ReadResponseAsByte(t.Result, token, fileStream, contentLength, OperationType.Download);
-                                return fileStream.Length > 0 as object;
+                                // ReSharper disable once ArrangeRedundantParentheses (required by mono)
+                                return (fileStream.Length > 0) as object;
                             }
                             catch
                             {
