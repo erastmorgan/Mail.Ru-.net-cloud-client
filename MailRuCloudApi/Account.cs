@@ -11,7 +11,6 @@ namespace MailRuCloudApi
     using System.Net;
     using System.Net.Configuration;
     using System.Text;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// MAIL.RU account info.
@@ -21,7 +20,7 @@ namespace MailRuCloudApi
         /// <summary>
         /// Default cookies.
         /// </summary>
-        private CookieContainer cookies = null;
+        private CookieContainer _cookies;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Account" /> class.
@@ -30,8 +29,8 @@ namespace MailRuCloudApi
         /// <param name="password">Password related with this login</param>
         public Account(string login, string password)
         {
-            this.LoginName = login;
-            this.Password = password;
+            LoginName = login;
+            Password = password;
         }
 
         /// <summary>
@@ -50,18 +49,7 @@ namespace MailRuCloudApi
         /// Gets account cookies.
         /// </summary>
         /// <value>Account cookies.</value>
-        public CookieContainer Cookies
-        {
-            get
-            {
-                return this.cookies ?? (this.cookies = new CookieContainer());
-            }
-
-            private set
-            {
-                this.cookies = value ?? new CookieContainer();
-            }
-        }
+        public CookieContainer Cookies => _cookies ?? (_cookies = new CookieContainer());
 
         /// <summary>
         /// Gets or sets login name.
@@ -81,26 +69,23 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         public bool Login()
         {
-            if (string.IsNullOrEmpty(this.LoginName))
+            if (string.IsNullOrEmpty(LoginName))
             {
                 throw new ArgumentException("LoginName is null or empty.");
             }
 
-            if (string.IsNullOrEmpty(this.Password))
+            if (string.IsNullOrEmpty(Password))
             {
                 throw new ArgumentException("Password is null or empty.");
             }
 
-            if (new DefaultProxySection().Enabled)
-            {
-                this.Proxy = WebProxy.GetDefaultProxy();
-            }
+            Proxy = WebRequest.DefaultWebProxy;
 
-            string reqString = string.Format("Login={0}&Domain={1}&Password={2}", this.LoginName, ConstSettings.Domain, this.Password);
+            string reqString = $"Login={LoginName}&Domain={ConstSettings.Domain}&Password={Password}";
             byte[] requestData = Encoding.UTF8.GetBytes(reqString);
-            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}/cgi-bin/auth", ConstSettings.AuthDomen));
-            request.Proxy = this.Proxy;
-            request.CookieContainer = this.Cookies;
+            var request = (HttpWebRequest)WebRequest.Create($"{ConstSettings.AuthDomen}/cgi-bin/auth");
+            request.Proxy = Proxy;
+            request.CookieContainer = Cookies;
             request.Method = "POST";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = ConstSettings.DefaultAcceptType;
@@ -112,20 +97,14 @@ namespace MailRuCloudApi
                 {
                     if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        if (this.Cookies != null && this.Cookies.Count > 0)
+                        if (Cookies != null && Cookies.Count > 0)
                         {
-                            this.EnsureSdcCookie();
-                            return this.GetAuthToken();
+                            EnsureSdcCookie();
+                            return GetAuthToken();
                         }
-                        else
-                        {
-                            return false;
-                        }
+                        return false;
                     }
-                    else
-                    {
-                        throw new Exception();
-                    }
+                    throw new Exception();
                 }
             }
         }
@@ -135,16 +114,16 @@ namespace MailRuCloudApi
         /// </summary>
         private void EnsureSdcCookie()
         {
-            var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}/sdc?from={1}/home", ConstSettings.AuthDomen, ConstSettings.CloudDomain));
-            request.Proxy = this.Proxy;
-            request.CookieContainer = this.Cookies;
+            var request = (HttpWebRequest)WebRequest.Create($"{ConstSettings.AuthDomen}/sdc?from={ConstSettings.CloudDomain}/home");
+            request.Proxy = Proxy;
+            request.CookieContainer = Cookies;
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = ConstSettings.DefaultAcceptType;
             request.UserAgent = ConstSettings.UserAgent;
             using (var response = request.GetResponse() as HttpWebResponse)
             {
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (response == null || response.StatusCode != HttpStatusCode.OK)
                 {
                     throw new Exception();
                 }
@@ -157,24 +136,21 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         private bool GetAuthToken()
         {
-            var uri = new Uri(string.Format("{0}/api/v2/tokens/csrf", ConstSettings.CloudDomain));
+            var uri = new Uri($"{ConstSettings.CloudDomain}/api/v2/tokens/csrf");
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
-            request.Proxy = this.Proxy;
-            request.CookieContainer = this.Cookies;
+            request.Proxy = Proxy;
+            request.CookieContainer = Cookies;
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
             request.UserAgent = ConstSettings.UserAgent;
             using (var response = request.GetResponse() as HttpWebResponse)
             {
-                if (response.StatusCode == HttpStatusCode.OK)
+                if (response == null || response.StatusCode == HttpStatusCode.OK)
                 {
-                    return !string.IsNullOrEmpty(this.AuthToken = JsonParser.Parse(new MailRuCloud().ReadResponseAsText(response), PObject.Token) as string);
+                    return !string.IsNullOrEmpty(AuthToken = JsonParser.Parse(new MailRuCloud().ReadResponseAsText(response), PObject.Token) as string);
                 }
-                else
-                {
-                    throw new Exception();
-                }
+                throw new Exception();
             }
         }
     }
