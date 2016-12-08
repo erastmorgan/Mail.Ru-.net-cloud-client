@@ -538,7 +538,7 @@ namespace MailRuCloudApi
             }
 
             var uri = new Uri(
-                $"{ConstSettings.CloudDomain}/api/v2/folder?token={Account.AuthToken}&home={HttpUtility.UrlEncode(path)}");
+                $"{ConstSettings.CloudDomain}/api/v2/folder?token={Account.AuthToken}&home={Uri.EscapeDataString(path)}");
             var request = (HttpWebRequest) WebRequest.Create(uri.OriginalString);
             request.Proxy = Account.Proxy;
             request.CookieContainer = Account.Cookies;
@@ -580,16 +580,6 @@ namespace MailRuCloudApi
                     var conf = DeserializeMultiFileConfig(Encoding.UTF8.GetString(fileBytes));
 
                     tempFiles.Add(new File(file.FullPath, conf.Size, FileType.MultiFile, null));
-                    //{
-                    //    //Name = conf.OriginalFileName,
-                    //    Size = new FileSize()
-                    //    {
-                    //        DefaultValue = conf.Size
-                    //    },
-                    //    FullPath = file.FullPath,
-                    //    Type = FileType.MultiFile,
-                    //    PrimaryName = file.PrimaryName
-                    //});
 
                     multiFileParts.AddRange(conf.Parts);
                 }
@@ -941,7 +931,7 @@ namespace MailRuCloudApi
             request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = size + boundaryRequest.LongLength + endBoundaryRequest.LongLength;
-            request.Referer = $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(destinationPath)}";
+            request.Referer = $"{ConstSettings.CloudDomain}/home{Uri.EscapeDataString(destinationPath)}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = $"multipart/form-data; boundary=----{boundary}";
@@ -1033,7 +1023,7 @@ namespace MailRuCloudApi
 
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest) WebRequest.Create($"{shard.Url}{sourceFile.TrimStart('/')}");
+                var request = (HttpWebRequest) WebRequest.Create($"{shard.Url}{Uri.EscapeDataString(sourceFile.TrimStart('/'))}");
                 request.Proxy = Account.Proxy;
                 request.CookieContainer = Account.Cookies;
                 request.Method = "GET";
@@ -1118,7 +1108,7 @@ namespace MailRuCloudApi
             var addFileRequest = Encoding.UTF8.GetBytes(
                 string.Format(
                     "{5}={0}&api={1}&token={2}&email={3}&x-email={4}",
-                    publish ? fullPath : publishLink.Replace(ConstSettings.PublishFileLink, string.Empty),
+                    Uri.EscapeDataString(publish ? fullPath : publishLink.Replace(ConstSettings.PublishFileLink, string.Empty)),
                     2,
                     Account.AuthToken,
                     Account.LoginName,
@@ -1178,8 +1168,8 @@ namespace MailRuCloudApi
         {
             var moveRequest =
                 Encoding.UTF8.GetBytes(
-                    string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&name={4}", fullPath,
-                        2, Account.AuthToken, Account.LoginName, newName));
+                    string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&name={4}", Uri.EscapeDataString(fullPath),
+                        2, Account.AuthToken, Account.LoginName, Uri.EscapeDataString(newName)));
 
             var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/rename");
             var request = (HttpWebRequest) WebRequest.Create(url.OriginalString);
@@ -1228,7 +1218,7 @@ namespace MailRuCloudApi
             var moveRequest =
                 Encoding.UTF8.GetBytes(
                     string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}&conflict=rename&folder={4}",
-                        sourceFullPath, 2, Account.AuthToken, Account.LoginName, destinationPath));
+                        Uri.EscapeDataString(sourceFullPath), 2, Account.AuthToken, Account.LoginName, Uri.EscapeDataString(destinationPath)));
 
             var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/{(move ? "move" : "copy")}");
             var request = (HttpWebRequest) WebRequest.Create(url.OriginalString);
@@ -1357,7 +1347,7 @@ namespace MailRuCloudApi
         private async Task<bool> Remove(string fullPath)
         {
 
-            var removeString = string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", HttpUtility.UrlEncode(fullPath), 2, Account.AuthToken, Account.LoginName);
+            var removeString = string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", Uri.EscapeDataString(fullPath), 2, Account.AuthToken, Account.LoginName);
             var removeRequest = Encoding.UTF8.GetBytes(removeString);
 
             var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/file/remove");
@@ -1366,7 +1356,7 @@ namespace MailRuCloudApi
             request.CookieContainer = Account.Cookies;
             request.Method = "POST";
             request.ContentLength = removeRequest.LongLength;
-            request.Referer = $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(fullPath.Substring(0, fullPath.LastIndexOf("/", StringComparison.Ordinal) + 1))}";
+            request.Referer = $"{ConstSettings.CloudDomain}/home{Uri.EscapeDataString(fullPath.Substring(0, fullPath.LastIndexOf("/", StringComparison.Ordinal) + 1))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;
@@ -1401,7 +1391,7 @@ namespace MailRuCloudApi
             var hasFile = fileInfo.Hash != null && fileInfo.Size.DefaultValue != 0;
             var filePart = hasFile ? $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}" : string.Empty;
             var addFileRequest = Encoding.UTF8.GetBytes(
-                $"home={HttpUtility.UrlEncode(fileInfo.FullPath)}&conflict=rename&api={2}&token={Account.AuthToken}" + filePart);
+                $"home={Uri.EscapeDataString(fileInfo.FullPath)}&conflict=rename&api={2}&token={Account.AuthToken}" + filePart);
 
             var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/{(hasFile ? "file" : "folder")}/add");
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
@@ -1410,7 +1400,7 @@ namespace MailRuCloudApi
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
             request.Referer =
-                $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.Name, StringComparison.Ordinal)))}";
+                $"{ConstSettings.CloudDomain}/home{Uri.EscapeDataString(fileInfo.FullPath.Substring(0, fileInfo.FullPath.LastIndexOf(fileInfo.Name, StringComparison.Ordinal)))}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;

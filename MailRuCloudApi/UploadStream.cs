@@ -48,7 +48,7 @@ namespace MailRuCloudApi
             //// Boundary request building.
             var boundaryBuilder = new StringBuilder();
             boundaryBuilder.AppendFormat("------{0}\r\n", boundary);
-            boundaryBuilder.AppendFormat("Content-Disposition: form-data; name=\"file\"; filename=\"{0}\"\r\n",  HttpUtility.UrlEncode(_file.Name));
+            boundaryBuilder.AppendFormat("Content-Disposition: form-data; name=\"file\"; filename=\"{0}\"\r\n", Uri.EscapeDataString(_file.Name));
             boundaryBuilder.AppendFormat("Content-Type: {0}\r\n\r\n", ConstSettings.GetContentType(_file.Extension));
 
             var endBoundaryBuilder = new StringBuilder();
@@ -66,7 +66,7 @@ namespace MailRuCloudApi
             _request.ContentLength = _file.Size.DefaultValue + boundaryRequest.LongLength + _endBoundaryRequest.LongLength;
             //_request.SendChunked = true;
 
-            _request.Referer = $"{ConstSettings.CloudDomain}/home/{HttpUtility.UrlEncode(_file.Path)}";
+            _request.Referer = $"{ConstSettings.CloudDomain}/home/{Uri.EscapeDataString(_file.Path)}";
             _request.Headers.Add("Origin", ConstSettings.CloudDomain);
             _request.Host = url.Host;
             _request.ContentType = $"multipart/form-data; boundary=----{boundary}";
@@ -230,7 +230,7 @@ namespace MailRuCloudApi
             //var filePart = hasFile ? $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}" : string.Empty;
             var filePart = $"&hash={fileInfo.Hash}&size={fileInfo.Size.DefaultValue}";
 
-            string addFileString = $"home={HttpUtility.UrlEncode(fileInfo.FullPath)}&conflict={GetConflictSolverParameter(conflict)}&api=2&token={_account.AuthToken}" + filePart;
+            string addFileString = $"home={Uri.EscapeDataString(fileInfo.FullPath)}&conflict={GetConflictSolverParameter(conflict)}&api=2&token={_account.AuthToken}" + filePart;
             var addFileRequest = Encoding.UTF8.GetBytes(addFileString);
 
             //var url = new Uri($"{ConstSettings.CloudDomain}/api/v2/{(hasFile ? "file" : "folder")}/add");
@@ -240,7 +240,7 @@ namespace MailRuCloudApi
             request.CookieContainer = _account.Cookies;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
-            request.Referer = $"{ConstSettings.CloudDomain}/home{HttpUtility.UrlEncode(fileInfo.Path)}";
+            request.Referer = $"{ConstSettings.CloudDomain}/home{Uri.EscapeDataString(fileInfo.Path)}";
             request.Headers.Add("Origin", ConstSettings.CloudDomain);
             request.Host = url.Host;
             request.ContentType = ConstSettings.DefaultRequestType;

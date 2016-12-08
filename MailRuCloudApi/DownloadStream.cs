@@ -63,7 +63,7 @@ namespace MailRuCloudApi
 
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{sourceFile}");
+                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{Uri.EscapeDataString(sourceFile)}");
                 request.Proxy = _account.Proxy;
                 request.CookieContainer = _account.Cookies;
                 request.Method = "GET";
@@ -128,7 +128,7 @@ namespace MailRuCloudApi
 
             foreach (var sourceFile in sourceFullFilePaths)
             {
-                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{sourceFile.TrimStart('/')}");
+                var request = (HttpWebRequest) WebRequest.Create($"{_shard.Url}{Uri.EscapeDataString(sourceFile.TrimStart('/'))}");
                 request.Proxy = _account.Proxy;
                 request.CookieContainer = _account.Cookies;
                 request.Method = "GET";
