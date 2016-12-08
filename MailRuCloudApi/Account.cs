@@ -9,7 +9,6 @@ namespace MailRuCloudApi
 {
     using System;
     using System.Net;
-    using System.Net.Configuration;
     using System.Text;
 
     /// <summary>
@@ -63,6 +62,8 @@ namespace MailRuCloudApi
         /// <value>Password related with login.</value>
         public string Password { get; set; }
 
+        public AccountInfo Info { get; set; }
+
         /// <summary>
         /// Authorize on MAIL.RU server.
         /// </summary>
@@ -79,7 +80,9 @@ namespace MailRuCloudApi
                 throw new ArgumentException("Password is null or empty.");
             }
 
+            WebRequest.DefaultWebProxy.Credentials = CredentialCache.DefaultCredentials;
             Proxy = WebRequest.DefaultWebProxy;
+            
 
             string reqString = $"Login={LoginName}&Domain={ConstSettings.Domain}&Password={Password}";
             byte[] requestData = Encoding.UTF8.GetBytes(reqString);
@@ -153,5 +156,8 @@ namespace MailRuCloudApi
                 throw new Exception();
             }
         }
+
+
+
     }
 }
