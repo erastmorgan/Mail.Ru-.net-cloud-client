@@ -40,7 +40,8 @@ namespace MailRuCloudApi
         /// </summary>
         BodyAsString = 3,
 
-        Quota = 10
+        Quota = 10,
+        AccountInfo = 11
     }
 
     /// <summary>
@@ -57,10 +58,10 @@ namespace MailRuCloudApi
         /// <returns>Parsed object.</returns>
         public static object Parse(string response, PObject parseObject, object param = null)
         {
-            JObject parsedJObject = null;
+            JObject parsedJObject;
             if (string.IsNullOrEmpty(response))
             {
-                throw new ArgumentNullException("Response text is null or empty.");
+                throw new ArgumentNullException("response");
             }
 
             //// Cancellation token.
@@ -69,14 +70,7 @@ namespace MailRuCloudApi
                 return null;
             }
 
-            try
-            {
-                parsedJObject = JObject.Parse(response);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            parsedJObject = JObject.Parse(response);
 
             var httpStatusCode = (int)parsedJObject["status"];
             if (httpStatusCode != (int)HttpStatusCode.OK)
@@ -98,6 +92,13 @@ namespace MailRuCloudApi
                         OverQuota = overQuota,
                         Total = total,
                         Used = used
+                    };
+
+                case PObject.AccountInfo:
+                    var fileSizeLimit = (long)parsedJObject["body"]["cloud"]["file_size_limit"];
+                    return new AccountInfo
+                    {
+                        FileSizeLimit = fileSizeLimit
                     };
 
 

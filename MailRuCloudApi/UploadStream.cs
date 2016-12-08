@@ -25,22 +25,23 @@ namespace MailRuCloudApi
             _shard = shard;
             _account = account;
             _cancelToken = cancelToken;
+            _maxFileSize = _account.Info.FileSizeLimit;
             Initialize();
         }
 
         private HttpWebRequest _request;
         private byte[] _endBoundaryRequest;
-        private const long MaxFileSize = 2L*1024L*1024L*1024L;
+        private readonly long _maxFileSize;
 
 
 
         private void Initialize()
         {
-            // we don't know, free or paid account, so maybe later
-            //if (_file.Size.DefaultValue > MaxFileSize)
-            //{
-            //    throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {MaxFileSize} byte. Currently file size is {_file.Size.DefaultValue} byte."));
-            //}
+            long allowedSize = _maxFileSize - _file.Name.Length*2;
+            if (_file.Size.DefaultValue > allowedSize)
+            {
+                throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {allowedSize} byte. Currently file size is {_file.Size.DefaultValue} bytes + + {_file.Name.Length * 2} bytes for filename."));
+            }
 
             var boundary = Guid.NewGuid();
 

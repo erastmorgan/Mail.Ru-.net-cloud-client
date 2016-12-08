@@ -50,6 +50,8 @@ namespace MailRuCloudApi
             {
                 throw new Exception("Auth token has't been retrieved.");
             }
+
+            Account.Info = GetAccountInfo().Result;
         }
 
         /// <summary>
@@ -62,6 +64,8 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>Account info.</value>
         public Account Account { get; set; }
+
+
 
         /// <summary>
         /// Abort all prolonged async operations.
@@ -486,6 +490,37 @@ namespace MailRuCloudApi
             });
 
             return quota;
+        }
+
+        private async Task<AccountInfo> GetAccountInfo()
+        {
+            CheckAuth();
+            var uri = new Uri($"{ConstSettings.CloudDomain}/api/v2/user?token={Account.AuthToken}");
+            var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
+            request.Proxy = Account.Proxy;
+            request.CookieContainer = Account.Cookies;
+            request.Method = "GET";
+            request.ContentType = ConstSettings.DefaultRequestType;
+            request.Accept = "application/json";
+            request.UserAgent = ConstSettings.UserAgent;
+            var task = Task.Factory.FromAsync(request.BeginGetResponse,
+                asyncResult => request.EndGetResponse(asyncResult), null);
+            AccountInfo accountInfo = null;
+            var result = await task.ContinueWith((t) =>
+            {
+                using (var response = t.Result as HttpWebResponse)
+                {
+                    if (response != null && response.StatusCode == HttpStatusCode.OK)
+                    {
+                        string data = ReadResponseAsText(response);
+                        accountInfo = (AccountInfo)JsonParser.Parse(data, PObject.AccountInfo);
+                        return true;
+                    }
+                    throw new Exception();
+                }
+            });
+
+            return accountInfo;
         }
 
 
