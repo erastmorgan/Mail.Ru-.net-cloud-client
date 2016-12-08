@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="DownloadStream.cs" />
     <Compile Include="Entry.cs" />
+    <Compile Include="Extensions.cs" />
     <Compile Include="File.cs" />
     <Compile Include="FileSize.cs" />
     <Compile Include="Folder.cs" />

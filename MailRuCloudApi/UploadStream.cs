@@ -37,10 +37,10 @@ namespace MailRuCloudApi
 
         private void Initialize()
         {
-            long allowedSize = _maxFileSize - _file.Name.Length*2;
+            long allowedSize = _maxFileSize - _file.Name.BytesCount();
             if (_file.Size.DefaultValue > allowedSize)
             {
-                throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {allowedSize} byte. Currently file size is {_file.Size.DefaultValue} bytes + + {_file.Name.Length * 2} bytes for filename."));
+                throw new OverflowException("Not supported file size.", new Exception($"The maximum file size is {allowedSize} byte. Currently file size is {_file.Size.DefaultValue} bytes + {_file.Name.BytesCount()} bytes for filename."));
             }
 
             var boundary = Guid.NewGuid();
