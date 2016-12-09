@@ -65,6 +65,7 @@
     <Compile Include="MailRuCloudApi.cs" />
     <Compile Include="Quota.cs" />
     <Compile Include="RingBufferedStream.cs" />
+    <Compile Include="SpecialCommand.cs" />
     <Compile Include="UploadStream.cs" />
     <Compile Include="MultiFile.cs" />
     <Compile Include="MultiFilePart.cs">

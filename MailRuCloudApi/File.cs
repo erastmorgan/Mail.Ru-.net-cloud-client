@@ -50,19 +50,7 @@ namespace MailRuCloudApi
         /// Gets file name.
         /// </summary>
         /// <value>File name.</value>
-        public string Name
-        {
-            get
-            {
-                //return _name;
-                return FullPath.Substring(FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1);
-            }
-            //set
-            //{
-            //    if (value.Contains("/") || value.Contains("\\")) throw new InvalidEnumArgumentException(nameof(Name));
-            //    _name = value;
-            //}
-        }
+        public string Name => FullPath.Substring(FullPath.LastIndexOf("/", StringComparison.Ordinal) + 1);
 
         public string Extension => System.IO.Path.GetExtension(Name);
 
