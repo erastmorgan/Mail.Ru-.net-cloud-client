@@ -12,6 +12,7 @@ namespace MailRuCloudApi
     using System.Net.Configuration;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Web;
 
     /// <summary>
     /// MAIL.RU account info.
@@ -96,7 +97,7 @@ namespace MailRuCloudApi
                 this.Proxy = WebProxy.GetDefaultProxy();
             }
 
-            string reqString = string.Format("Login={0}&Domain={1}&Password={2}", this.LoginName, ConstSettings.Domain, this.Password);
+            string reqString = string.Format("Login={0}&Domain={1}&Password={2}", this.LoginName, ConstSettings.Domain, HttpUtility.UrlEncode(this.Password));
             byte[] requestData = Encoding.UTF8.GetBytes(reqString);
             var request = (HttpWebRequest)WebRequest.Create(string.Format("{0}/cgi-bin/auth", ConstSettings.AuthDomen));
             request.Proxy = this.Proxy;
