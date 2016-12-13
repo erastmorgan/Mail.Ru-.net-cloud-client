@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.ComponentModel;
 
 namespace MailRuCloudApi
 {
@@ -44,7 +43,6 @@ namespace MailRuCloudApi
 
 
         private string _fullPath;
-        private string _name;
 
         /// <summary>
         /// Gets file name.

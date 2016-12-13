@@ -8,32 +8,6 @@
 namespace MailRuCloudApi
 {
     /// <summary>
-    /// The unit metter.
-    /// </summary>
-    public enum StorageUnit
-    {
-        /// <summary>
-        /// Unit as byte type.
-        /// </summary>
-        Byte = 0,
-
-        /// <summary>
-        /// Unit as kilobyte.
-        /// </summary>
-        Kb = 1,
-
-        /// <summary>
-        /// Unit as megabyte.
-        /// </summary>
-        Mb = 2,
-
-        /// <summary>
-        /// Unit as gigabyte.
-        /// </summary>
-        Gb = 3
-    }
-
-    /// <summary>
     /// File size definition.
     /// </summary>
     public class FileSize
@@ -41,7 +15,7 @@ namespace MailRuCloudApi
         /// <summary>
         /// Private variable for default value.
         /// </summary>
-        private long defValue = 0;
+        private long _defValue;
 
         /// <summary>
         /// Gets default size in bytes.
@@ -51,13 +25,13 @@ namespace MailRuCloudApi
         {
             get
             {
-                return this.defValue;
+                return _defValue;
             }
 
             internal set
             {
-                this.defValue = value;
-                this.SetNormalizedValue();
+                _defValue = value;
+                SetNormalizedValue();
             }
         }
 
@@ -77,25 +51,25 @@ namespace MailRuCloudApi
         /// </summary>
         private void SetNormalizedValue()
         {
-            if (this.defValue < 1024L)
+            if (_defValue < 1024L)
             {
-                this.NormalizedType = StorageUnit.Byte;
-                this.NormalizedValue = (float)this.defValue;
+                NormalizedType = StorageUnit.Byte;
+                NormalizedValue = (float)_defValue;
             }
-            else if (this.defValue >= 1024L && this.defValue < 1024L * 1024L)
+            else if (_defValue >= 1024L && _defValue < 1024L * 1024L)
             {
-                this.NormalizedType = StorageUnit.Kb;
-                this.NormalizedValue = (float)this.defValue / 1024f;
+                NormalizedType = StorageUnit.Kb;
+                NormalizedValue = (float)_defValue / 1024f;
             }
-            else if (this.defValue >= 1024L * 1024L && this.defValue < 1024L * 1024L * 1024L)
+            else if (_defValue >= 1024L * 1024L && _defValue < 1024L * 1024L * 1024L)
             {
-                this.NormalizedType = StorageUnit.Mb;
-                this.NormalizedValue = (float)this.defValue / 1024f / 1024f;
+                NormalizedType = StorageUnit.Mb;
+                NormalizedValue = (float)_defValue / 1024f / 1024f;
             }
             else
             {
-                this.NormalizedType = StorageUnit.Gb;
-                this.NormalizedValue = (float)this.defValue / 1024f / 1024f / 1024f;
+                NormalizedType = StorageUnit.Gb;
+                NormalizedValue = (float)_defValue / 1024f / 1024f / 1024f;
             }
         }
     }

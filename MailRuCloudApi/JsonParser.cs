@@ -58,10 +58,9 @@ namespace MailRuCloudApi
         /// <returns>Parsed object.</returns>
         public static object Parse(string response, PObject parseObject, object param = null)
         {
-            JObject parsedJObject;
             if (string.IsNullOrEmpty(response))
             {
-                throw new ArgumentNullException("response");
+                throw new ArgumentNullException(nameof(response));
             }
 
             //// Cancellation token.
@@ -70,7 +69,7 @@ namespace MailRuCloudApi
                 return null;
             }
 
-            parsedJObject = JObject.Parse(response);
+            var parsedJObject = JObject.Parse(response);
 
             var httpStatusCode = (int)parsedJObject["status"];
             if (httpStatusCode != (int)HttpStatusCode.OK)
@@ -122,7 +121,7 @@ namespace MailRuCloudApi
 
                         if (type == "folder")
                         {
-                            folders.Add(new Folder()
+                            folders.Add(new Folder(path)
                             {
                                 NumberOfFolders = (int)item["count"]["folders"],
                                 NumberOfFiles = (int)item["count"]["files"],
@@ -130,8 +129,6 @@ namespace MailRuCloudApi
                                 {
                                     DefaultValue = size
                                 },
-                                FullPath = path,
-                                //Name = name,
                                 PublicLink = weblink
                             });
                         }
@@ -157,8 +154,8 @@ namespace MailRuCloudApi
 
                 case PObject.Shard:
                     var shardType = param as string;
-                    var selectedShard = (parsedJObject["body"][shardType] as JArray).First();
-                    return new ShardInfo()
+                    var selectedShard = (parsedJObject["body"][shardType] as JArray)?.First();
+                    return new ShardInfo
                     {
                         Type = GetEnumFromDescription<ShardType>(param as string),
                         Count = (int)selectedShard["count"],
@@ -175,7 +172,7 @@ namespace MailRuCloudApi
         private static DateTime UnixTimeStampToDateTime(double unixTimeStamp)
         {
             // Unix timestamp is seconds past epoch
-            System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+            var dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
             dtDateTime = dtDateTime.AddSeconds(unixTimeStamp).ToLocalTime();
             return dtDateTime;
         }
@@ -192,15 +189,15 @@ namespace MailRuCloudApi
             Type type = enumerationValue.GetType();
             if (!type.IsEnum)
             {
-                throw new ArgumentException("EnumerationValue must be of Enum type", "enumerationValue");
+                throw new ArgumentException("EnumerationValue must be of Enum type", nameof(enumerationValue));
             }
 
             MemberInfo[] memberInfo = type.GetMember(enumerationValue.ToString());
-            if (memberInfo != null && memberInfo.Length > 0)
+            if (memberInfo.Length > 0)
             {
                 object[] attrs = memberInfo[0].GetCustomAttributes(typeof(DescriptionAttribute), false);
 
-                if (attrs != null && attrs.Length > 0)
+                if (attrs.Length > 0)
                 {
                     return ((DescriptionAttribute)attrs[0]).Description;
                 }
@@ -244,7 +241,7 @@ namespace MailRuCloudApi
                 }
             }
 
-            throw new ArgumentException("Not found.", "description");
+            throw new ArgumentException("Not found.", nameof(description));
         }
     }
 }

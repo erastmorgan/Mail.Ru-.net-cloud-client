@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MailRuCloudApi
+﻿namespace MailRuCloudApi
 {
     public class Quota
     {

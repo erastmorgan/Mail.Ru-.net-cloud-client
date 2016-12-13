@@ -4,7 +4,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace MailRuCloudApi
 {
@@ -299,7 +298,7 @@ namespace MailRuCloudApi
         }
 
 
-        private long WriteBytesInStream(byte[] bytes, Stream outputStream, CancellationToken token, long length, bool includeProgressEvent = false, OperationType operation = OperationType.None)
+        private long WriteBytesInStream(byte[] bytes, Stream outputStream, CancellationToken token, long length)
         {
             BufferSize -= bytes.Length;
 

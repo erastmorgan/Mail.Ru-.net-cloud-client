@@ -66,6 +66,7 @@
     <Compile Include="Quota.cs" />
     <Compile Include="RingBufferedStream.cs" />
     <Compile Include="SpecialCommand.cs" />
+    <Compile Include="StorageUnit.cs" />
     <Compile Include="UploadStream.cs" />
     <Compile Include="MultiFile.cs" />
     <Compile Include="MultiFilePart.cs">

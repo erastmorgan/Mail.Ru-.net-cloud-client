@@ -5,9 +5,6 @@
 // <author>Korolev Erast.</author>
 //-----------------------------------------------------------------------
 
-using System.Resources;
-using Microsoft.SqlServer.Server;
-
 namespace MailRuCloudApi
 {
     using System;
@@ -478,7 +475,7 @@ namespace MailRuCloudApi
             var task = Task.Factory.FromAsync(request.BeginGetResponse,
                 asyncResult => request.EndGetResponse(asyncResult), null);
             Quota quota = null;
-            var result = await task.ContinueWith((t) =>
+            await task.ContinueWith((t) =>
             {
                 using (var response = t.Result as HttpWebResponse)
                 {
@@ -509,7 +506,7 @@ namespace MailRuCloudApi
             var task = Task.Factory.FromAsync(request.BeginGetResponse,
                 asyncResult => request.EndGetResponse(asyncResult), null);
             AccountInfo accountInfo = null;
-            var result = await task.ContinueWith((t) =>
+            await task.ContinueWith((t) =>
             {
                 using (var response = t.Result as HttpWebResponse)
                 {
@@ -610,7 +607,7 @@ namespace MailRuCloudApi
                 path = "/";
             }
 
-            url = url.Substring(url.LastIndexOf("public/") + 7);
+            url = url.Substring(url.LastIndexOf("public/", StringComparison.Ordinal) + 7);
 
             var uri = new Uri($"https://cloud.mail.ru/api/v2/clone?folder={Uri.EscapeDataString(path)}&weblink={url}&token={Account.AuthToken}");
 
@@ -620,18 +617,15 @@ namespace MailRuCloudApi
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;
             request.Accept = "application/json";
-            //request.Referer = url;
             request.UserAgent = ConstSettings.UserAgent;
             var task = Task.Factory.FromAsync(request.BeginGetResponse,
                 asyncResult => request.EndGetResponse(asyncResult), null);
-            Entry entry = null;
-            var result = await task.ContinueWith((t) =>
+            await task.ContinueWith((t) =>
             {
                 using (var response = t.Result as HttpWebResponse)
                 {
                     if (response != null && response.StatusCode == HttpStatusCode.OK)
                     {
-                        //entry = (Entry)JsonParser.Parse(ReadResponseAsText(response), PObject.Entry);
                         return true;
                     }
                     throw new Exception();
