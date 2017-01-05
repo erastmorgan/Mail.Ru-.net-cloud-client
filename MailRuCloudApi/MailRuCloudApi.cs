@@ -363,7 +363,10 @@ namespace MailRuCloudApi
 
             var url = new Uri(string.Format("{0}/api/v2/tokens/download", ConstSettings.CloudDomain));
             var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
+            if (this.Account != null)
+            {
+                request.Proxy = this.Account.Proxy;
+            }
             request.CookieContainer = cookie;
             request.Method = "POST";
             request.ContentLength = addFileRequest.LongLength;
@@ -1458,10 +1461,16 @@ namespace MailRuCloudApi
         /// <returns>Shard info.</returns>
         private async Task<ShardInfo> GetShardInfo(ShardType shardType, bool useAnonymousUser, CookieContainer cookie)
         {
-            this.CheckAuth();
+            if (!useAnonymousUser)
+            {
+                CheckAuth();
+            }
             var uri = new Uri(string.Format("{0}/api/v2/dispatcher?{2}={1}", ConstSettings.CloudDomain, !useAnonymousUser ? this.Account.AuthToken : 2.ToString(), !useAnonymousUser ? "token" : "api"));
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
-            request.Proxy = this.Account.Proxy;
+            if (Account != null)
+            {
+                request.Proxy = this.Account.Proxy;
+            }
             request.CookieContainer = !useAnonymousUser ? Account.Cookies : new CookieContainer();
             request.Method = "GET";
             request.ContentType = ConstSettings.DefaultRequestType;

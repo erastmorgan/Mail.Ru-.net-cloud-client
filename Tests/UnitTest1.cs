@@ -5,6 +5,7 @@ using System.IO;
 using System.ComponentModel;
 using System.Threading;
 using System;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -14,6 +15,14 @@ namespace Tests
         //private const string Login = "asdf@asdf.ru";
         //private const string Password = "asdfsvba";
         //private Account account = new Account(Login, Password);
+
+        [TestMethod]
+        public async Task GetPublishDirectLinkTest()
+        {
+            MailRuCloud cloud = new MailRuCloud();
+            string downloadLink = await cloud.GetPublishDirectLink("https://cloud.mail.ru/public/Euhr/WwtEeZmKH", FileType.SingleFile);
+            Assert.IsNotNull(downloadLink);
+        }
 
         //[TestMethod]
         //public void A1LoginTest()
