@@ -7,6 +7,8 @@
 
 namespace MailRuCloudApi
 {
+    using System;
+
     /// <summary>
     /// Cloud file type.
     /// </summary>
@@ -62,6 +64,11 @@ namespace MailRuCloudApi
         /// Gets cloud file type.
         /// </summary>
         public FileType Type { get; internal set; }
+
+        /// <summary>
+        /// Gets last modified time of file in UTC format.
+        /// </summary>
+        public DateTime LastModifiedTimeUTC { get; internal set; }
 
         /// <summary>
         /// Gets or sets base file name.

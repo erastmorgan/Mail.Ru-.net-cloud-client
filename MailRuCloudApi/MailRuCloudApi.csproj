@@ -54,6 +54,7 @@
     <Compile Include="ConstSettings.cs">
       <ExcludeFromStyleCop>True</ExcludeFromStyleCop>
     </Compile>
+    <Compile Include="DiskUsage.cs" />
     <Compile Include="Entry.cs" />
     <Compile Include="File.cs" />
     <Compile Include="FileSize.cs" />

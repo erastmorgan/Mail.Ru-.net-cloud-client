@@ -38,7 +38,12 @@ namespace MailRuCloudApi
         /// <summary>
         /// Full body string.
         /// </summary>
-        BodyAsString = 3
+        BodyAsString = 3,
+
+        /// <summary>
+        /// Disk space usage.
+        /// </summary>
+        DiskUsage = 4
     }
 
     /// <summary>
@@ -121,6 +126,9 @@ namespace MailRuCloudApi
                         }
                         else if (type == "file")
                         {
+                            var timeStamp = 0L;
+                            long.TryParse((string)item["mtime"], out timeStamp);
+                            var modifiedTime = new DateTime(1970, 1, 1, 0, 0, 0, 0).AddSeconds(timeStamp).ToUniversalTime();
                             files.Add(new File()
                             {
                                 Size = new FileSize()
@@ -132,6 +140,7 @@ namespace MailRuCloudApi
                                 Hash = (string)item["hash"],
                                 PublicLink = weblink,
                                 Type = FileType.SingleFile,
+                                LastModifiedTimeUTC = modifiedTime,
                                 PrimaryName = name,
                                 PrimarySize = new FileSize()
                                 {
@@ -155,6 +164,25 @@ namespace MailRuCloudApi
 
                 case PObject.BodyAsString:
                     return (string)parsedJObject["body"];
+
+                case PObject.DiskUsage:
+                    var diskSpace = parsedJObject["body"];
+                    var totalDiskSize = 0L;
+                    long.TryParse((string)diskSpace["total"], out totalDiskSize);
+
+                    var usedDiskSize = 0L;
+                    long.TryParse((string)diskSpace["used"], out usedDiskSize);
+                    return new DiskUsage
+                    {
+                        Total = new FileSize
+                        {
+                            DefaultValue = totalDiskSize * 1024L * 1024L
+                        },
+                        Used = new FileSize
+                        {
+                            DefaultValue = usedDiskSize * 1024L * 1024L
+                        }
+                    };
             }
 
             return null;

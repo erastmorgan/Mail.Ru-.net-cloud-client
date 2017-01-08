@@ -30,7 +30,12 @@ namespace MailRuCloudApi
         /// <summary>
         /// Unit as gigabyte.
         /// </summary>
-        Gb = 3
+        Gb = 3,
+
+        /// <summary>
+        /// Unit as terabyte.
+        /// </summary>
+        Tb = 4
     }
 
     /// <summary>
@@ -92,10 +97,15 @@ namespace MailRuCloudApi
                 this.NormalizedType = StorageUnit.Mb;
                 this.NormalizedValue = (float)this.defValue / 1024f / 1024f;
             }
-            else
+            else if (this.defValue >= 1024L * 1024L * 1024L && this.defValue < 1024L * 1024L * 1024L * 1024L)
             {
                 this.NormalizedType = StorageUnit.Gb;
                 this.NormalizedValue = (float)this.defValue / 1024f / 1024f / 1024f;
+            }
+            else
+            {
+                this.NormalizedType = StorageUnit.Tb;
+                this.NormalizedValue = (float)this.defValue / 1024f / 1024f / 1024f / 1024f;
             }
         }
     }

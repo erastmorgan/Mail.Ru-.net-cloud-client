@@ -463,7 +463,7 @@ namespace MailRuCloudApi
         /// <returns>List of the items.</returns>
         public async Task<Entry> GetItems(string path)
         {
-            this.CheckAuth();
+            this.Account.CheckAuth();
             if (string.IsNullOrEmpty(path))
             {
                 path = "/";
@@ -827,7 +827,7 @@ namespace MailRuCloudApi
                 throw new OverflowException("Not supported file size.", new Exception(string.Format("The maximum file size is {0} byte. Currently file size is {1} byte.", maxFileSize, size)));
             }
 
-            this.CheckAuth();
+            this.Account.CheckAuth();
             var shard = await this.GetShardInfo(ShardType.Upload);
             var boundary = Guid.NewGuid();
 
@@ -919,7 +919,7 @@ namespace MailRuCloudApi
         /// <returns>File as byte array.</returns>
         private async Task<object> GetFile(string[] sourceFullFilePaths, string fileName, string destinationPath, long contentLength = 0)
         {
-            this.CheckAuth();
+            this.Account.CheckAuth();
             var shard = await this.GetShardInfo(ShardType.Get);
             destinationPath = destinationPath == null || destinationPath.EndsWith(@"\") ? destinationPath : destinationPath + @"\";
             FileStream fileStream = null;
@@ -1463,7 +1463,7 @@ namespace MailRuCloudApi
         {
             if (!useAnonymousUser)
             {
-                CheckAuth();
+                this.Account.CheckAuth();
             }
             var uri = new Uri(string.Format("{0}/api/v2/dispatcher?{2}={1}", ConstSettings.CloudDomain, !useAnonymousUser ? this.Account.AuthToken : 2.ToString(), !useAnonymousUser ? "token" : "api"));
             var request = (HttpWebRequest)WebRequest.Create(uri.OriginalString);
@@ -1492,25 +1492,6 @@ namespace MailRuCloudApi
                     }
                 }
             });
-        }
-
-        /// <summary>
-        /// Need to add this function for all calls.
-        /// </summary>
-        private void CheckAuth()
-        {
-            if (this.Account == null)
-            {
-                throw new Exception("Account is null or empty");
-            }
-
-            if (string.IsNullOrEmpty(this.Account.AuthToken))
-            {
-                if (!this.Account.Login())
-                {
-                    throw new Exception("Auth token has't been retrieved.");
-                }
-            }
         }
 
         /// <summary>

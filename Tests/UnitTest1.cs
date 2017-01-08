@@ -12,9 +12,9 @@ namespace Tests
     [TestClass]
     public class UnitTest1
     {
-        //private const string Login = "asdf@asdf.ru";
-        //private const string Password = "asdfsvba";
-        //private Account account = new Account(Login, Password);
+        private const string Login = "your";
+        private const string Password = "your";
+        private Account account = new Account(Login, Password);
 
         [TestMethod]
         public async Task GetPublishDirectLinkTest()
@@ -24,35 +24,44 @@ namespace Tests
             Assert.IsNotNull(downloadLink);
         }
 
-        //[TestMethod]
-        //public void A1LoginTest()
-        //{
-        //    account.Login();
-        //    Assert.IsNotNull(account.AuthToken);
-        //}
+        [TestMethod]
+        public void A1LoginTest()
+        {
+            account.Login();
+            Assert.IsNotNull(account.AuthToken);
+        }
+
+        [TestMethod]
+        public void TestGettingAccountInfo()
+        {
+            var diskUsage = this.account.GetDiskUsage().Result;
+            Assert.IsTrue(diskUsage.Free.DefaultValue > 0L 
+                && diskUsage.Total.DefaultValue > 0L 
+                && diskUsage.Used.DefaultValue > 0L);
+        }
 
         //[TestMethod]
         //public void GetItemsTest()
         //{
         //    var api = new MailRuCloud();
         //    api.Account = this.account;
-        //    var items = api.GetItems("/Camera Uploads/");
+        //    var items = api.GetItems("/new folder/new folder 2").Result;
         //    Assert.IsNotNull(items);
         //    Assert.IsTrue(items.Files.Count == items.NumberOfFiles || items.Folders.Count == items.NumberOfFolders);
 
         //    var percent = 0;
-        //    api.ChangingProgressEvent += delegate(object sender, ProgressChangedEventArgs e)
+        //    api.ChangingProgressEvent += delegate (object sender, ProgressChangedEventArgs e)
         //    {
         //        percent = e.ProgressPercentage;
         //    };
 
         //    var fileToDownload = items.Files.First(t => t.Size.DefaultValue <= 1 * 1024 * 1024);
-        //    var task = api.GetFileAsync(fileToDownload);
+        //    var task = api.GetFile(fileToDownload);
         //    Assert.IsNotNull(task.Result);
         //    Assert.IsTrue(percent == 100);
 
         //    percent = 0;
-        //    var task2 = api.GetFileAsync(fileToDownload, @"C:\Development\MailRuCloudApi\");
+        //    var task2 = api.GetFile(fileToDownload, @"C:\Development\MailRuCloudApi\");
         //    Assert.IsTrue(task2.Result);
         //    Assert.IsTrue(percent == 100);
 
