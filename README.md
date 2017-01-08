@@ -2,6 +2,8 @@
 .Net Client for cloud.mail.ru
 
 Main functionality with implementations:
+- Get disk space usage in cloud.mail.ru
+  <br/>GetDiskUsage() - Returns Total/Free/Used size.
 - Create folder
   <br/>CreateFolder(string folderName, string destinationPath) - return bool result of the operation
 - Copy file
