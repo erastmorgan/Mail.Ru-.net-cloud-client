@@ -6,14 +6,15 @@ using System.ComponentModel;
 using System.Threading;
 using System;
 using System.Threading.Tasks;
+using System.Text;
 
 namespace Tests
 {
     [TestClass]
     public class UnitTest1
     {
-        private const string Login = "your";
-        private const string Password = "your";
+        private const string Login = "my.mailrutest@mail.ru";
+        private const string Password = "1a2b3c4d";
         private Account account = new Account(Login, Password);
 
         [TestMethod]
@@ -35,9 +36,24 @@ namespace Tests
         public void TestGettingAccountInfo()
         {
             var diskUsage = this.account.GetDiskUsage().Result;
-            Assert.IsTrue(diskUsage.Free.DefaultValue > 0L 
-                && diskUsage.Total.DefaultValue > 0L 
+            Assert.IsTrue(diskUsage.Free.DefaultValue > 0L
+                && diskUsage.Total.DefaultValue > 0L
                 && diskUsage.Used.DefaultValue > 0L);
+        }
+
+        [TestMethod]
+        public void TestUploadFileFromStream()
+        {
+            var content = new MemoryStream(Encoding.UTF8.GetBytes("MyTestContent"));
+            var size = content.Length;
+            var destinationPath = "/";
+
+            var api = new MailRuCloud() { Account = account };
+
+            var result = api.UploadFileAsync("UploadTest.txt", content, destinationPath).Result;
+
+            Assert.IsInstanceOfType(result, typeof(MailRuCloudApi.File));
+            Assert.AreEqual(size, result.Size.DefaultValue);
         }
 
         //[TestMethod]
@@ -119,13 +135,13 @@ namespace Tests
         //    var publicFileLink = api.GetPublishLink(fileToDownload);
 
         //    var folder = new Folder(
-        //        0, 
-        //        0, 
-        //        "Camera Uploads", 
+        //        0,
+        //        0,
+        //        "Camera Uploads",
         //        new FileSize()
         //        {
         //            DefaultValue = 0
-        //        }, 
+        //        },
         //        "/Camera Uploads");
         //    var publishFolderLink = api.GetPublishLink(folder);
 
