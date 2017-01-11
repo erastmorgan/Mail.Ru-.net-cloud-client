@@ -13,8 +13,8 @@ namespace Tests
     [TestClass]
     public class UnitTest1
     {
-        private const string Login = "my.mailrutest@mail.ru";
-        private const string Password = "1a2b3c4d";
+        private const string Login = "your";
+        private const string Password = "your";
         private Account account = new Account(Login, Password);
 
         [TestMethod]
@@ -44,16 +44,93 @@ namespace Tests
         [TestMethod]
         public void TestUploadFileFromStream()
         {
-            var content = new MemoryStream(Encoding.UTF8.GetBytes("MyTestContent"));
-            var size = content.Length;
+            var fileName = "UploadTest.txt";
+            var content = "MyTestContent";
             var destinationPath = "/";
+            var source = new MemoryStream(Encoding.UTF8.GetBytes(content));
+            var size = source.Length;
 
             var api = new MailRuCloud() { Account = account };
 
-            var result = api.UploadFileAsync("UploadTest.txt", content, destinationPath).Result;
+            var result = api.UploadFileAsync(fileName, source, destinationPath).Result;
 
             Assert.IsInstanceOfType(result, typeof(MailRuCloudApi.File));
             Assert.AreEqual(size, result.Size.DefaultValue);
+        }
+
+        [TestMethod]
+        public void TestDownloadFileToStream()
+        {
+            var fileName = "UploadTest.txt";
+            var content = "MyTestContent";
+            var sourcePath = "/";
+
+            var api = new MailRuCloud() { Account = account };
+
+            var result = new MemoryStream(api.GetFile(new MailRuCloudApi.File(fileName, sourcePath + fileName), false).Result);
+
+            using (var streamReader = new StreamReader(result))
+                Assert.AreEqual(content, streamReader.ReadToEnd());
+        }
+
+        [TestMethod]
+        public void TestUploadBinaryFileFromStream()
+        {
+            var fileName = "UploadTestBinary.bin";
+            var content = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray();
+            var destinationPath = "/";
+            var source = new MemoryStream(content);
+            var size = source.Length;
+
+            var api = new MailRuCloud() { Account = account };
+
+            var result = api.UploadFileAsync(fileName, source, destinationPath).Result;
+
+            Assert.IsInstanceOfType(result, typeof(MailRuCloudApi.File));
+            Assert.AreEqual(size, result.Size.DefaultValue);
+        }
+
+        [TestMethod]
+        public void TestDownloadBinaryFileToStream()
+        {
+            var fileName = "UploadTestBinary.bin";
+            var content = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray();
+            var sourcePath = "/";
+
+            var api = new MailRuCloud() { Account = account };
+
+            var result = new MemoryStream(api.GetFile(new MailRuCloudApi.File(fileName, sourcePath + fileName), false).Result);
+
+            var output = new byte[result.Length];
+            result.Read(output, 0, (int)result.Length);
+            CollectionAssert.AreEqual(content, output);
+        }
+
+
+        [TestMethod]
+        public void TestRemoveFileByFullPath()
+        {
+            var fileName = "RemoveTest.txt";
+            var content = "MyTestContent";
+            var destinationPath = "/";
+            var source = new MemoryStream(Encoding.UTF8.GetBytes(content));
+            var size = source.Length;
+
+            var api = new MailRuCloud() { Account = account };
+
+            var entry = api.GetItems(destinationPath).Result;
+            Assert.IsFalse(entry.Files.Any(i => i.Name == fileName));
+
+            var result = api.UploadFileAsync(fileName, source, destinationPath).Result;
+            Assert.IsInstanceOfType(result, typeof(MailRuCloudApi.File));
+
+            entry = api.GetItems(destinationPath).Result;
+            Assert.IsTrue(entry.Files.Any(i => i.Name == fileName));
+
+            api.Remove(destinationPath + fileName).Wait();
+
+            entry = api.GetItems(destinationPath).Result;
+            Assert.IsFalse(entry.Files.Any(i => i.Name == fileName));
         }
 
         //[TestMethod]
@@ -86,23 +163,23 @@ namespace Tests
         //    Assert.IsTrue(fileInfo.Length > 0, "File size in not retrieved.");
         //}
 
-        //[TestMethod]
-        //public void UploadFileTest()
-        //{
-        //    var api = new MailRuCloud();
-        //    api.Account = this.account;
+        [TestMethod]
+        public void UploadFileTest()
+        {
+            var api = new MailRuCloud();
+            api.Account = this.account;
 
-        //    var percent = 0;
-        //    api.ChangingProgressEvent += delegate(object sender, ProgressChangedEventArgs e)
-        //    {
-        //        percent = e.ProgressPercentage;
-        //    };
+            var percent = 0;
+            api.ChangingProgressEvent += delegate (object sender, ProgressChangedEventArgs e)
+            {
+                percent = e.ProgressPercentage;
+            };
 
-        //    var task = api.UploadFileAsync(new FileInfo(@"C:\Development\MailRuCloudApi\1.txt"), "/");
-        //    Assert.IsTrue(task.Result);
-        //    Assert.IsTrue(percent == 100);
-        //    Thread.Sleep(5000);
-        //}
+            var task = api.UploadFile(new FileInfo(@"..\..\Properties\AssemblyInfo.cs"), "/");
+            Assert.IsTrue(task.Result);
+            Assert.IsTrue(percent == 100);
+            Thread.Sleep(5000);
+        }
 
         //[TestMethod]
         //public void GetPublishDirectLinkTest()

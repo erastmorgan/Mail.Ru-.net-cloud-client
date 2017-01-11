@@ -1305,7 +1305,7 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="fullPath">Full file or folder name.</param>
         /// <returns>True or false result operation.</returns>
-        private async Task<bool> Remove(string fullPath)
+        public async Task<bool> Remove(string fullPath)
         {
             var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", fullPath, 2, this.Account.AuthToken, this.Account.LoginName));
 
