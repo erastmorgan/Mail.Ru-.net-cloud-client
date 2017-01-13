@@ -606,6 +606,15 @@ namespace MailRuCloudApi
             taskAction);
         }
 
+        /// <summary>
+        /// Upload a <see cref="Stream"/> to a file on the server.
+        /// </summary>
+        /// <param name="fileName">The name of the <see cref="File"/> to create on the server.</param>
+        /// <param name="content">The content to be uploaded.</param>
+        /// <param name="destinationPath">Destination path on the server.</param>
+        /// <returns>a <see cref="File"/> representing the uploaded content on the server.</returns>
+        /// <exception cref="ArgumentException">is thrown if the specified content exceeds 2GB in size.</exception>
+        /// <remarks>This method supports content of up to 2GB in size.</remarks>
         public async Task<File> UploadFileAsync(string fileName, Stream content, string destinationPath)
         {
             if (string.IsNullOrWhiteSpace(fileName))
