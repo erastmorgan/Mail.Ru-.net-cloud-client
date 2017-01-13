@@ -80,5 +80,24 @@ namespace MailRuCloudApi
         /// </summary>
         /// <value>File size.</value>
         internal FileSize PrimarySize { get; set; }
+
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="File" /> class.
+        /// </summary>
+        public File()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="File" /> class.
+        /// </summary>
+        /// <param name="name">Folder name.</param>
+        /// <param name="fullPath">Full folder path.</param>
+        public File(string name, string fullPath)
+        {
+            this.Name = name;
+            this.FulPath = fullPath;
+        }
     }
 }

@@ -607,6 +607,31 @@ namespace MailRuCloudApi
         }
 
         /// <summary>
+        /// Upload a <see cref="Stream"/> to a file on the server.
+        /// </summary>
+        /// <param name="fileName">The name of the <see cref="File"/> to create on the server.</param>
+        /// <param name="content">The content to be uploaded.</param>
+        /// <param name="destinationPath">Destination path on the server.</param>
+        /// <returns>a <see cref="File"/> representing the uploaded content on the server.</returns>
+        /// <exception cref="ArgumentException">is thrown if the specified content exceeds 2GB in size.</exception>
+        /// <remarks>This method supports content of up to 2GB in size.</remarks>
+        public async Task<File> UploadFileAsync(string fileName, Stream content, string destinationPath)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentNullException(nameof(fileName));
+            if (content == null)
+                throw new ArgumentNullException(nameof(content));
+            if (!content.CanRead)
+                throw new ArgumentException("Upload Stream must be readable", nameof(content));
+            if (content.Length > 1L << 31)
+                throw new ArgumentException("Upload Stream exceeds max size", nameof(content));
+            if (string.IsNullOrWhiteSpace(destinationPath))
+                throw new ArgumentNullException(nameof(destinationPath));
+
+            return await UploadFileAsync(fileName, content, destinationPath, true);
+        }
+
+        /// <summary>
         /// Upload file on the server asynchronously, if not use async await will be use synchronously operation.
         /// </summary>
         /// <param name="file">File info.</param>
@@ -807,6 +832,43 @@ namespace MailRuCloudApi
             }
         }
 
+        private byte[] GetBoundaryRequest(Guid boundary, string filePath)
+        {
+            var boundaryBuilder = new StringBuilder();
+            boundaryBuilder.AppendFormat("------{0}\r\n", boundary);
+            boundaryBuilder.AppendFormat("Content-Disposition: form-data; name=\"file\"; filename=\"{0}\"\r\n", Path.GetFileName(filePath));
+            boundaryBuilder.AppendFormat("Content-Type: {0}\r\n\r\n", ConstSettings.GetContentType(Path.GetExtension(filePath)));
+
+            return Encoding.UTF8.GetBytes(boundaryBuilder.ToString());
+        }
+
+        private byte[] GetEndBoundaryRequest(Guid boundary)
+        {
+            var endBoundaryBuilder = new StringBuilder();
+            endBoundaryBuilder.AppendFormat("\r\n------{0}--\r\n", boundary);
+
+            return Encoding.UTF8.GetBytes(endBoundaryBuilder.ToString());
+        }
+
+        private WebRequest GetUploadRequest(ShardInfo shard, Guid boundary, string fullFilePath, long size, string destinationPath)
+        {
+            var url = new Uri(string.Format("{0}?cloud_domain=2&{1}", shard.Url, this.Account.LoginName));
+            var request = WebRequest.Create(url.OriginalString) as HttpWebRequest;
+            request.Proxy = this.Account.Proxy;
+            request.CookieContainer = this.Account.Cookies;
+            request.Method = "POST";
+            request.ContentLength = size;
+            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(destinationPath));
+            request.Headers.Add("Origin", ConstSettings.CloudDomain);
+            request.Host = url.Host;
+            request.ContentType = string.Format("multipart/form-data; boundary=----{0}", boundary.ToString());
+            request.Accept = "*/*";
+            request.UserAgent = ConstSettings.UserAgent;
+            request.AllowWriteStreamBuffering = false;
+
+            return request;
+        }
+
         /// <summary>
         /// Upload file on the server asynchronously, if not use async await will be use synchronously operation.
         /// </summary>
@@ -820,93 +882,117 @@ namespace MailRuCloudApi
         /// <returns>True or false result operation.</returns>
         private async Task<bool> UploadFile(string fileName, string fullFilePath, string extension, long startPosition, long size, string destinationPath, bool includeProgressEvent)
         {
-            destinationPath = destinationPath.EndsWith("/") ? destinationPath : destinationPath + "/";
-            var maxFileSize = 2L * 1024L * 1024L * 1024L;
+            const long maxFileSize = 2L * 1024L * 1024L * 1024L;
             if (size > maxFileSize)
             {
                 throw new OverflowException("Not supported file size.", new Exception(string.Format("The maximum file size is {0} byte. Currently file size is {1} byte.", maxFileSize, size)));
             }
 
+            if (!destinationPath.EndsWith("/"))
+                destinationPath += "/";
+
             this.Account.CheckAuth();
             var shard = await this.GetShardInfo(ShardType.Upload);
             var boundary = Guid.NewGuid();
 
-            //// Boundary request building.
-            var boundaryBuilder = new StringBuilder();
-            boundaryBuilder.AppendFormat("------{0}\r\n", boundary);
-            boundaryBuilder.AppendFormat("Content-Disposition: form-data; name=\"file\"; filename=\"{0}\"\r\n", fileName);
-            boundaryBuilder.AppendFormat("Content-Type: {0}\r\n\r\n", ConstSettings.GetContentType(extension));
+            var boundaryRequest = GetBoundaryRequest(boundary, fullFilePath);
+            var endBoundaryRequest = GetEndBoundaryRequest(boundary);
 
-            var endBoundaryBuilder = new StringBuilder();
-            endBoundaryBuilder.AppendFormat("\r\n------{0}--\r\n", boundary);
+            var request = GetUploadRequest(shard, boundary, fullFilePath, size + boundaryRequest.LongLength + endBoundaryRequest.LongLength, destinationPath);
 
-            var endBoundaryRequest = Encoding.UTF8.GetBytes(endBoundaryBuilder.ToString());
-            var boundaryRequest = Encoding.UTF8.GetBytes(boundaryBuilder.ToString());
-
-            var url = new Uri(string.Format("{0}?cloud_domain=2&{1}", shard.Url, this.Account.LoginName));
-            var request = (HttpWebRequest)WebRequest.Create(url.OriginalString);
-            request.Proxy = this.Account.Proxy;
-            request.CookieContainer = this.Account.Cookies;
-            request.Method = "POST";
-            request.ContentLength = size + boundaryRequest.LongLength + endBoundaryRequest.LongLength;
-            request.Referer = string.Format("{0}/home{1}", ConstSettings.CloudDomain, HttpUtility.UrlEncode(destinationPath));
-            request.Headers.Add("Origin", ConstSettings.CloudDomain);
-            request.Host = url.Host;
-            request.ContentType = string.Format("multipart/form-data; boundary=----{0}", boundary.ToString());
-            request.Accept = "*/*";
-            request.UserAgent = ConstSettings.UserAgent;
-            request.AllowWriteStreamBuffering = false;
-
-            var task = Task.Factory.FromAsync(request.BeginGetRequestStream, asyncResult => request.EndGetRequestStream(asyncResult), (object)null);
-            return await task.ContinueWith(
-                (t, m) =>
+            try
+            {
+                using (var requestStream = await request.GetRequestStreamAsync())
                 {
-                    try
+                    WriteBytesInStream(boundaryRequest, requestStream, this.cancelToken.Token);
+                    WriteBytesInStream(fullFilePath, startPosition, size, requestStream, this.cancelToken.Token, includeProgressEvent, OperationType.Upload);
+                    WriteBytesInStream(endBoundaryRequest, requestStream, this.cancelToken.Token);
+                    requestStream.Close();
+                }
+
+                using (var response = (HttpWebResponse)await request.GetResponseAsync())
+                {
+                    if (response.StatusCode == HttpStatusCode.OK)
                     {
-                        var token = (CancellationToken)m;
-                        using (var s = t.Result)
-                        {
-                            this.WriteBytesInStream(boundaryRequest, s, token);
-                            this.WriteBytesInStream(fullFilePath, startPosition, size, s, token, includeProgressEvent, OperationType.Upload);
-                            this.WriteBytesInStream(endBoundaryRequest, s, token);
+                        var responseParts = ReadResponseAsText(response).Split(';');
+                        var hashResult = responseParts[0];
+                        var sizeResult = long.Parse(responseParts[1].Replace("\r\n", string.Empty));
 
-                            using (var response = (HttpWebResponse)request.GetResponse())
-                            {
-                                if (response.StatusCode == HttpStatusCode.OK)
-                                {
-                                    var resp = ReadResponseAsText(response).Split(new char[] { ';' });
-                                    var hashResult = resp[0];
-                                    var sizeResult = long.Parse(resp[1].Replace("\r\n", string.Empty));
-
-                                    return this.AddFileInCloud(new File()
-                                    {
-                                        Name = fileName,
-                                        FulPath = HttpUtility.UrlDecode(destinationPath) + fileName,
-                                        Hash = hashResult,
-                                        Size = new FileSize()
-                                        {
-                                            DefaultValue = sizeResult
-                                        }
-                                    }).Result;
-                                }
-                            }
-                        }
+                        var result = new File() { Name = fileName, FulPath = HttpUtility.UrlDecode(destinationPath) + fileName, Hash = hashResult, Size = new FileSize() { DefaultValue = size } };
+                        return await this.AddFileInCloud(result);
                     }
-                    catch
+                    else
                     {
                         return false;
                     }
-                    finally
-                    {
-                        if (t.Result != null)
-                        {
-                            t.Result.Dispose();
-                        }
-                    }
+                }
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
 
-                    return true;
-                },
-            this.cancelToken.Token);
+        /// <summary>
+        /// Upload file on the server asynchronously, if not use async await will be use synchronously operation.
+        /// </summary>
+        /// <param name="fullFilePath">Full file path on the file system.</param>
+        /// <param name="content">The content.</param>
+        /// <param name="destinationPath">Destination file path on the server.</param>
+        /// <param name="includeProgressEvent">On or off progress event for operation.</param>
+        /// <returns>The uploaded File.</returns>
+        private async Task<File> UploadFileAsync(string fullFilePath, Stream content, string destinationPath, bool includeProgressEvent)
+        {
+            var fileName = Path.GetFileName(fullFilePath);
+            if (!destinationPath.EndsWith("/"))
+                destinationPath += "/";
+            var size = content.Length;
+
+            this.Account.CheckAuth();
+            var shard = await this.GetShardInfo(ShardType.Upload);
+            var boundary = Guid.NewGuid();
+
+            var boundaryRequest = GetBoundaryRequest(boundary, fullFilePath);
+            var endBoundaryRequest = GetEndBoundaryRequest(boundary);
+
+            var request = GetUploadRequest(shard, boundary, fullFilePath, size + boundaryRequest.LongLength + endBoundaryRequest.LongLength, destinationPath);
+
+            try
+            {
+                using (var requestStream = await request.GetRequestStreamAsync())
+                {
+                    WriteBytesInStream(boundaryRequest, requestStream, this.cancelToken.Token);
+                    using (var source = new BinaryReader(content))
+                    {
+                        source.BaseStream.Seek(0, SeekOrigin.Begin);
+                        this.WriteBytesInStream(source, requestStream, this.cancelToken.Token, size, includeProgressEvent, OperationType.Upload);
+                    }
+                    WriteBytesInStream(endBoundaryRequest, requestStream, this.cancelToken.Token);
+                    requestStream.Close();
+                }
+
+                using (var response = (HttpWebResponse)await request.GetResponseAsync())
+                {
+                    if (response.StatusCode == HttpStatusCode.OK)
+                    {
+                        var responseParts = ReadResponseAsText(response).Split(';');
+                        var hashResult = responseParts[0];
+                        var sizeResult = long.Parse(responseParts[1].Replace("\r\n", string.Empty));
+
+                        var result = new File() { Name = fileName, FulPath = HttpUtility.UrlDecode(destinationPath) + fileName, Hash = hashResult, Size = new FileSize() { DefaultValue = size } };
+                        var success = await this.AddFileInCloud(result);
+                        return success ? result : null;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -1228,7 +1314,7 @@ namespace MailRuCloudApi
         /// </summary>
         /// <param name="fullPath">Full file or folder name.</param>
         /// <returns>True or false result operation.</returns>
-        private async Task<bool> Remove(string fullPath)
+        public async Task<bool> Remove(string fullPath)
         {
             var removeRequest = Encoding.UTF8.GetBytes(string.Format("home={0}&api={1}&token={2}&email={3}&x-email={3}", fullPath, 2, this.Account.AuthToken, this.Account.LoginName));
 
